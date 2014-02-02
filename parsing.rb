@@ -57,30 +57,34 @@ module Parsing
 			end
 		end
 
-		def parse_expression(original_tokens)
-			result = nil
+		def parse_any(original_tokens, parses)
+			until parses.empty?
+				parse = parses.shift
 
-			[:parse_identifier, :parse_call, :parse_literal].each do |parse|
 				begin
 					working_tokens	= original_tokens.dup
 					result		= send parse, working_tokens
+
+					# At this point, we've succeeded,
+					# so destructively consume the actual token stream
 					while working_tokens.length < original_tokens.length
 						original_tokens.shift
 					end
-					break
+
+					return result
+
 				rescue Object => e
+					throw e if parses.empty?
 				end
 			end
+		end
 
-			throw :couldnt_parse_expression unless result
-			return result
+		def parse_expression(tokens)
+			parse_any tokens, [:parse_call, :parse_literal, :parse_identifier]
 		end
 
 		def parse_statement(tokens)
-			call		= parse_call tokens
-			terminator	= tokens.shift
-			throw :missing_semicolon unless terminator == ";"
-			return call
+			parse_any tokens, [:parse_expression]
 		end
 
 		def parse_block(tokens)
