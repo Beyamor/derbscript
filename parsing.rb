@@ -12,11 +12,35 @@ module Parsing
 			throw :missing_open_paren unless open_paren == "("
 
 			# TODO args
+			while not tokens.empty? and tokens[0] != ")"
+				tokens.shift
+			end
 
 			close_paren = tokens.shift
 			throw :missing_close_paren unless close_paren == ")"
 
-			return nil
+			return []
+		end
+
+		def try_parsing_call(tokens)
+			name		= try_parsing_identifier tokens
+			parameters	= try_parsing_parameter_declaration tokens
+
+			return {
+				:node		=> :call,
+				:name		=> name,
+				:paramters	=> parameters
+			}
+		end
+
+		def try_parsing_body(tokens)
+			body = []
+
+			while not tokens.empty? and tokens[0] != "}" do
+				body << try_parsing_call(tokens)
+			end
+
+			return body
 		end
 
 		def try_parsing_scope(tokens)
@@ -24,11 +48,12 @@ module Parsing
 			throw :missing_open_scope unless open_scope == "{"
 
 			# TODO an actual body
+			body = try_parsing_body tokens
 			
 			close_scope = tokens.shift
 			throw :missing_close_scope unless close_scope == "}"
 
-			return nil
+			return body
 		end
 
 		def try_parsing_proc(tokens)
