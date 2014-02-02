@@ -83,7 +83,7 @@ module Parsing
 			return call
 		end
 
-		def parse_scope(tokens)
+		def parse_block(tokens)
 			open_scope = tokens.shift
 			throw :missing_open_scope unless open_scope == "{"
 
@@ -105,7 +105,7 @@ module Parsing
 
 			name		= parse_identifier(tokens)
 			parameters	= parse_parameter_declaration(tokens)
-			body		= parse_scope(tokens)
+			body		= parse_block(tokens)
 
 			return Statements::ProcDefinition.new name, parameters, body
 		end
