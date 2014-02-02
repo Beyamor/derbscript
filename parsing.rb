@@ -1,3 +1,6 @@
+require_relative "statements"
+require_relative "expressions"
+
 module Parsing
 	class Parser
 
@@ -26,11 +29,7 @@ module Parsing
 			name		= try_parsing_identifier tokens
 			parameters	= try_parsing_parameter_declaration tokens
 
-			return {
-				:node		=> :call,
-				:name		=> name,
-				:paramters	=> parameters
-			}
+			return Expressions::Call.new name, parameters
 		end
 
 		def try_parsing_statement(tokens)
@@ -61,12 +60,7 @@ module Parsing
 			parameters	= try_parsing_parameter_declaration(tokens)
 			body		= try_parsing_scope(tokens)
 
-			return {
-				:node		=> :proc_declaration,
-				:name		=> name,
-				:paramters	=> parameters,
-				:body		=> body
-			}
+			return Statements::ProcDefinition.new name, parameters, body
 		end
 
 		def is_identifier(name)

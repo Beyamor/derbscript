@@ -1,7 +1,12 @@
-require_relative "tokenizing.rb"
+require_relative "tokenizing"
 require_relative "parsing"
+require_relative "primitives"
 
-contents	= File.read "scripts/helloworld.derp"
+context = {
+	"printFoo"	=> Primitives::Function.new {puts "foo"}
+}
+
+contents	= File.read "scripts/hellofoo.derp"
 tokens		= Tokenizing.tokenize contents
 parse_result	= Parsing.parse tokens
-puts parse_result
+parse_result.eval(context)
