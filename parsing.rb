@@ -1,7 +1,12 @@
-require_relative "statements.rb"
-
 module Parsing
 	class Parser
+
+		def try_parsing_identifier(tokens)
+			name = tokens.shift
+			throw :missing_identifier unless is_identifier name
+			return name
+		end
+
 		def try_parsing_parameter_declaration(tokens)
 			open_paren = tokens.shift
 			throw :missing_open_paren unless open_paren == "("
@@ -10,29 +15,36 @@ module Parsing
 
 			close_paren = tokens.shift
 			throw :missing_close_paren unless close_paren == ")"
+
+			return nil
 		end
 
 		def try_parsing_scope(tokens)
 			open_scope = tokens.shift
 			throw :missing_open_scope unless open_scope == "{"
 
-			# TODO body
+			# TODO an actual body
 			
 			close_scope = tokens.shift
 			throw :missing_close_scope unless close_scope == "}"
+
+			return nil
 		end
 
 		def try_parsing_proc(tokens)
 			declaration = tokens.shift
 			throw :missing_proc_declaration unless declaration and declaration == "proc"
 
-			name = tokens.shift
-			throw :missing_proc_name unless is_identifier name
-
+			name		= try_parsing_identifier(tokens)
 			parameters	= try_parsing_parameter_declaration(tokens)
 			body		= try_parsing_scope(tokens)
 
-			return [Statements::Proc.new(name, parameters, body), tokens]
+			return {
+				:node		=> :proc_declaration,
+				:name		=> name,
+				:paramters	=> parameters,
+				:body		=> body
+			}
 		end
 
 		def is_identifier(name)
