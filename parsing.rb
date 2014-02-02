@@ -33,23 +33,20 @@ module Parsing
 			}
 		end
 
-		def try_parsing_body(tokens)
-			body = []
-
-			while not tokens.empty? and tokens[0] != "}" do
-				body << try_parsing_call(tokens)
-			end
-
-			return body
+		def try_parsing_statement(tokens)
+			try_parsing_call tokens
 		end
 
 		def try_parsing_scope(tokens)
 			open_scope = tokens.shift
 			throw :missing_open_scope unless open_scope == "{"
 
-			# TODO an actual body
-			body = try_parsing_body tokens
-			
+			body = []
+			while not tokens.empty? and tokens[0] != "}"
+				statement = try_parsing_statement tokens
+				body << statement
+			end
+
 			close_scope = tokens.shift
 			throw :missing_close_scope unless close_scope == "}"
 
