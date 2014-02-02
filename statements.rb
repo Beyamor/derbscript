@@ -1,15 +1,14 @@
+require_relative "primitives"
+
 module Statements
 	class ProcDefinition
-		def initialize(name, parameters, body)
-			@name		= name
-			@parameters	= body
-			@body		= body
+		def initialize(name, parameter_names, body)
+			@name	= name
+			@proc	= Primitives::Proc.new parameter_names, body
 		end
 
 		def eval(context)
-			@body.each do |statement|
-				statement.eval context
-			end
+			context[@name] = @proc
 		end
 	end
 end

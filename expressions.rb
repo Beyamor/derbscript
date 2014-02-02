@@ -9,7 +9,7 @@ module Expressions
 
 		def eval(context)
 			@params.map! {|p| Evaling.eval p, context}
-			context[@name].call(@params)
+			context[@name].call(context, @params)
 		end
 	end
 end
