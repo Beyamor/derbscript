@@ -33,7 +33,10 @@ module Parsing
 		end
 
 		def try_parsing_statement(tokens)
-			try_parsing_call tokens
+			call		= try_parsing_call tokens
+			terminator	= tokens.shift
+			throw :missing_semicolon unless terminator == ";"
+			return call
 		end
 
 		def try_parsing_scope(tokens)
