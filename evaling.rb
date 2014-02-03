@@ -7,8 +7,8 @@ module Evaling
 
 	def Evaling.run(parse_tree)
 		global_scope			= Environment::Scope.new nil
-		global_scope["printFoo"]	= Primitives::Function.new {puts "foo"}
-		global_scope["println"]		= Primitives::Function.new {|x| puts x.to_s}
+		global_scope["printFoo"]	= Primitives::BlockFunction.new {puts "foo"}
+		global_scope["println"]		= Primitives::BlockFunction.new {|x| puts x.to_s}
 
 		Evaling.eval parse_tree, global_scope
 

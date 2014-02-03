@@ -2,7 +2,7 @@ require_relative "evaling"
 require_relative "environment"
 
 module Primitives
-	class Function
+	class BlockFunction
 		def initialize(&block)
 			@block = block
 		end
