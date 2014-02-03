@@ -24,4 +24,14 @@ module Expressions
 			scope[@name].call(@params)
 		end
 	end
+
+	class StringExpression
+		def initialize(expressions)
+			@expressions = expressions
+		end
+
+		def eval(scope)
+			result = @expressions.map{|e| Evaling.eval e, scope}.join
+		end
+	end
 end

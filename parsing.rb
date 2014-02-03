@@ -49,14 +49,17 @@ module Parsing
 			return Expressions::Call.new name, parameters
 		end
 
-		def parse_literal(tokens)
+		def parse_string_literal(tokens)
 			token = tokens.shift
-
 			if is_string? token
-				return Primitives::Literal.new token
+				return Primitives::Literal.new token[1...-1]
 			else
-				throw :couldnt_parse_literal
+				throw :couldnt_parse_string
 			end
+		end
+
+		def parse_literal(tokens)
+			parse_any tokens, [:parse_string_literal]
 		end
 
 		def parse_any(original_tokens, parses)
@@ -81,8 +84,31 @@ module Parsing
 			end
 		end
 
+		def parse_string_expression(tokens)
+			expect "[", tokens
+			expression = parse_expression tokens
+			expect "]", tokens
+			return expression
+		end
+
+		def parse_string(tokens)
+			first_expr	= parse_any tokens, [:parse_string_literal, :parse_string_expression]
+			exprs		= [first_expr]
+
+			while true
+				begin
+					expr = parse_any tokens, [:parse_literal, :parse_string_expression]
+					exprs << expr
+				rescue Object => e
+					break
+				end
+			end
+
+			return Expressions::StringExpression.new exprs
+		end
+
 		def parse_expression(tokens)
-			parse_any tokens, [:parse_call, :parse_literal, :parse_identifier]
+			parse_any tokens, [:parse_call, :parse_string, :parse_literal, :parse_identifier]
 		end
 
 		def parse_set_var(tokens)

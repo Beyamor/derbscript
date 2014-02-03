@@ -1,5 +1,5 @@
 module Tokenizing
-	SPECIAL_SYMBOLS		= ["=", ";", "(", ")", "{", "}", "\"", ","]
+	SPECIAL_SYMBOLS		= ["=", ";", "(", ")", "{", "}", "\"", ",", "[", "]"]
 	WHITESPACE		= [" ", "\n", "\r", "\t"]
 
 	def Tokenizing.tokenize(text)
