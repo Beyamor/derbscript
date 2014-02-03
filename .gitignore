@@ -1,3 +1,4 @@
 scripts
 *.sw[op]
 *.pyc
+*.txt
