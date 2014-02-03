@@ -1,6 +1,18 @@
 require_relative "evaling"
 
 module Expressions
+	class Identifier
+		attr_reader :name
+
+		def initialize(name)
+			@name = name
+		end
+
+		def eval(scope)
+			scope[@name]
+		end
+	end
+
 	class Call
 		def initialize(name, params)
 			@name	= name

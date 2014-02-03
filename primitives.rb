@@ -27,4 +27,16 @@ module Primitives
 			@body.each {|statement| Evaling.eval statement, @scope}
 		end
 	end
+
+	class Literal
+		attr_reader :value
+
+		def initialize(value)
+			@value = value
+		end
+
+		def eval(scope)
+			@value
+		end
+	end
 end

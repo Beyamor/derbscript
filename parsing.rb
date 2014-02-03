@@ -3,16 +3,19 @@ require_relative "expressions"
 
 module Parsing
 	class Parser
+		def expect(expectation, tokens)
+			actual	= tokens.shift
+			throw "#{actual} isn't #{expectation}" unless actual == expectation
+		end
 
 		def parse_identifier(tokens)
 			name = tokens.shift
 			throw :missing_identifier unless is_identifier? name
-			return name
+			return Expressions::Identifier.new name
 		end
 
 		def parse_paramter_list(tokens, param_parser)
-			open_paren = tokens.shift
-			throw :missing_open_paren unless open_paren == "("
+			expect "(", tokens
 
 			result = []
 			while not tokens.empty? and tokens[0] != ")"
@@ -26,8 +29,7 @@ module Parsing
 				end
 			end
 
-			close_paren = tokens.shift
-			throw :missing_close_paren unless close_paren == ")"
+			expect ")", tokens
 
 			return result
 		end
@@ -51,7 +53,7 @@ module Parsing
 			token = tokens.shift
 
 			if is_string? token
-				return token
+				return Primitives::Literal.new token
 			else
 				throw :couldnt_parse_literal
 			end
@@ -83,13 +85,19 @@ module Parsing
 			parse_any tokens, [:parse_call, :parse_literal, :parse_identifier]
 		end
 
+		def parse_set_var(tokens)
+			expect "set", tokens
+			name	= parse_identifier tokens
+			value	= parse_expression tokens
+			return Statements::SetVar.new name, value
+		end
+
 		def parse_statement(tokens)
-			parse_any tokens, [:parse_expression]
+			parse_any tokens, [:parse_set_var, :parse_expression]
 		end
 
 		def parse_block(tokens)
-			open_scope = tokens.shift
-			throw :missing_open_scope unless open_scope == "{"
+			expect "{", tokens
 
 			body = []
 			while not tokens.empty? and tokens[0] != "}"
@@ -97,15 +105,13 @@ module Parsing
 				body << statement
 			end
 
-			close_scope = tokens.shift
-			throw :missing_close_scope unless close_scope == "}"
+			expect "}", tokens
 
 			return body
 		end
 
 		def parse_proc(tokens)
-			declaration = tokens.shift
-			throw :missing_proc_declaration unless declaration and declaration == "proc"
+			expect "proc", tokens
 
 			name		= parse_identifier(tokens)
 			parameters	= parse_parameter_declaration(tokens)
