@@ -1,4 +1,5 @@
 require_relative "evaling"
+require_relative "environment"
 
 module Primitives
 	class Function
@@ -6,21 +7,24 @@ module Primitives
 			@block = block
 		end
 
-		def call(context, args)
-			@block.call *args
+		def call(params)
+			@block.call *params
 		end
 	end
 
 	class Proc
-		def initialize(param_names, body)
+		def initialize(param_names, body, parent_scope)
 			@param_names	= param_names
 			@body		= body
+			@scope		= Environment::Scope.new parent_scope
 		end
 
-		def call(context, params)
-			# TODO create an actual scope rather than clobbering the context
-			@param_names.zip(params).each {|name, param| context[name] = param}
-			@body.each {|statement| Evaling.eval statement, context}
+		def call(params)
+			@param_names.zip(params).each do |name, param|
+				@scope[name] = param
+			end
+
+			@body.each {|statement| Evaling.eval statement, @scope}
 		end
 	end
 end

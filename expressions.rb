@@ -7,9 +7,9 @@ module Expressions
 			@params	= params
 		end
 
-		def eval(context)
-			@params.map! {|p| Evaling.eval p, context}
-			context[@name].call(context, @params)
+		def eval(scope)
+			@params.map! {|p| Evaling.eval p, scope}
+			scope[@name].call(@params)
 		end
 	end
 end
