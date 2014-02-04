@@ -45,7 +45,7 @@ module Parsing
 		def parse_call(tokens)
 			name		= parse_identifier tokens
 			parameters	= parse_call_parameters tokens
-			
+
 			return Expressions::Call.new name, parameters
 		end
 
@@ -119,35 +119,44 @@ module Parsing
 		end
 
 		def parse_statement(tokens)
-			parse_any tokens, [:parse_set_var, :parse_expression]
+			parse_any tokens, [:parse_scope_definition, :parse_proc_definition, :parse_set_var, :parse_expression]
 		end
 
-		def parse_block(tokens)
-			expect "{", tokens
-
+		def parse_body(tokens)
 			body = []
 			while not tokens.empty? and tokens[0] != "}"
 				statement = parse_statement tokens
 				body << statement
 			end
+			return Statements::Block.new body
+		end
 
+		def parse_block(tokens)
+			expect "{", tokens
+			body = parse_body tokens
 			expect "}", tokens
-
 			return body
 		end
 
-		def parse_proc(tokens)
+		def parse_proc_definition(tokens)
 			expect "proc", tokens
 
-			name		= parse_identifier(tokens)
-			parameters	= parse_parameter_declaration(tokens)
-			body		= parse_block(tokens)
+			name		= parse_identifier tokens
+			parameters	= parse_parameter_declaration tokens
+			body		= parse_block tokens
 
 			return Statements::ProcDefinition.new name, parameters, body
 		end
 
+		def parse_scope_definition(tokens)
+			expect "scope", tokens
+			name	= parse_identifier tokens
+			body	= parse_block tokens
+			return Statements::ScopeDefinition.new name, body
+		end
+
 		def is_identifier?(name)
-			/^[a-zA-Z_][a-zA-Z_0-9]*$/ =~ name
+			/^[a-zA-Z_][a-zA-Z_0-9]*(:[a-zA-Z_][a-zA-Z_0-9]*)*$/ =~ name
 		end
 
 		def is_string?(token)
@@ -155,9 +164,12 @@ module Parsing
 		end
 
 		def parse(tokens)
-			result, updated_tokens = parse_proc tokens.dup
-			throw :couldnt_parse unless result
-			return result
+			begin
+				parse_body tokens
+			rescue Object => e
+				puts tokens.to_s
+				throw e
+			end
 		end
 	end
 

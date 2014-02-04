@@ -5,11 +5,20 @@ module Expressions
 		attr_reader :name
 
 		def initialize(name)
-			@name = name
+			*@scopes, @name = name.split ":"
 		end
 
 		def eval(scope)
+			@scopes.each {|sub_scope| scope = scope[sub_scope]}
 			scope[@name]
+		end
+
+		def to_s
+			if @scopes.empty?
+				@name
+			else
+				@scopes.join(":") + ":" + @name
+			end
 		end
 	end
 
@@ -21,7 +30,7 @@ module Expressions
 
 		def eval(scope)
 			@params.map! {|p| Evaling.eval p, scope}
-			scope[@name].call(@params)
+			@name.eval(scope).call(@params)
 		end
 	end
 

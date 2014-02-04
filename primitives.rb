@@ -24,7 +24,7 @@ module Primitives
 				@scope[name] = param
 			end
 
-			@body.each {|statement| Evaling.eval statement, @scope}
+			Evaling.eval @body, @scope
 		end
 	end
 
