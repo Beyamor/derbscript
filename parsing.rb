@@ -5,6 +5,45 @@ module Parsing
 	IDENTIFIER_PATTERN	= /^[a-zA-Z_][a-zA-Z_0-9]*(:[a-zA-Z_][a-zA-Z_0-9]*)*$/
 	STRING_PATTERN		= /^".*"$/
 
+	class Cursor
+		attr_reader :position
+
+		def initialize(tokens, position=0)
+			@tokens		= tokens
+			@position	= position
+		end
+
+		def [](value)
+			@tokens[@position + value]
+		end
+
+		def shift
+			value = @tokens[@position]
+			@position += 1
+			return value
+		end
+
+		def empty?
+			@position >= @tokens.length
+		end
+
+		def dup
+			Cursor.new @tokens, @position
+		end
+
+		def to_s
+			@tokens[@position..-1].to_s
+		end
+
+		def length
+			@tokens.length - @position
+		end
+
+		def move_to(other)
+			@position = other.position
+		end
+	end
+
 	class Parser
 		def is_identifier?(name)
 			 IDENTIFIER_PATTERN =~ name
@@ -14,54 +53,54 @@ module Parsing
 			 STRING_PATTERN =~ token
 		end
 
-		def expect(expectation, tokens)
-			actual	= tokens.shift
+		def expect(expectation, cursor)
+			actual	= cursor.shift
 			throw "#{actual} isn't #{expectation}" unless actual == expectation
 		end
 
-		def parse_identifier(tokens)
-			name = tokens.shift
+		def parse_identifier(cursor)
+			name = cursor.shift
 			throw :missing_identifier unless is_identifier? name
 			return Expressions::Identifier.new name
 		end
 
-		def parse_paramter_list(tokens, param_parser)
-			expect "(", tokens
+		def parse_paramter_list(cursor, param_parser)
+			expect "(", cursor
 
 			result = []
-			while not tokens.empty? and tokens[0] != ")"
-				param = send param_parser, tokens
+			while not cursor.empty? and cursor[0] != ")"
+				param = send param_parser, cursor
 				result << param
 
-				if tokens[0] == ","
-					tokens.shift
-				elsif tokens[0] != ")"
+				if cursor[0] == ","
+					cursor.shift
+				elsif cursor[0] != ")"
 					throw :malformed_parameter_declaration
 				end
 			end
 
-			expect ")", tokens
+			expect ")", cursor
 
 			return result
 		end
 
-		def parse_parameter_declaration(tokens)
-			return parse_paramter_list tokens, :parse_identifier
+		def parse_parameter_declaration(cursor)
+			return parse_paramter_list cursor, :parse_identifier
 		end
 
-		def parse_call_parameters(tokens)
-			return parse_paramter_list tokens, :parse_expression
+		def parse_call_parameters(cursor)
+			return parse_paramter_list cursor, :parse_expression
 		end
 
-		def parse_call(tokens)
-			name		= parse_identifier tokens
-			parameters	= parse_call_parameters tokens
+		def parse_call(cursor)
+			name		= parse_identifier cursor
+			parameters	= parse_call_parameters cursor
 
 			return Expressions::Call.new name, parameters
 		end
 
-		def parse_string_literal(tokens)
-			token = tokens.shift
+		def parse_string_literal(cursor)
+			token = cursor.shift
 			if is_string? token
 				return Primitives::Literal.new token[1...-1]
 			else
@@ -69,24 +108,19 @@ module Parsing
 			end
 		end
 
-		def parse_literal(tokens)
-			parse_any tokens, [:parse_string_literal]
+		def parse_literal(cursor)
+			parse_any cursor, [:parse_string_literal]
 		end
 
-		def parse_any(original_tokens, parses)
+		def parse_any(original_cursor, parses)
 			until parses.empty?
 				parse = parses.shift
 
 				begin
-					working_tokens	= original_tokens.dup
-					result		= send parse, working_tokens
+					working_cursor	= original_cursor.dup
+					result		= send parse, working_cursor
 
-					# At this point, we've succeeded,
-					# so destructively consume the actual token stream
-					while working_tokens.length < original_tokens.length
-						original_tokens.shift
-					end
-
+					original_cursor.move_to working_cursor
 					return result
 
 				rescue Object => e
@@ -95,22 +129,22 @@ module Parsing
 			end
 		end
 
-		def parse_string_expression(tokens)
-			expect "[", tokens
-			expression = parse_expression tokens
-			expect "]", tokens
+		def parse_string_expression(cursor)
+			expect "[", cursor
+			expression = parse_expression cursor
+			expect "]", cursor
 			return expression
 		end
 
-		def parse_string(tokens)
-			first_expr	= parse_any tokens, [:parse_string_literal, :parse_string_expression]
+		def parse_string(cursor)
+			first_expr	= parse_any cursor, [:parse_string_literal, :parse_string_expression]
 			exprs		= [first_expr]
 
 			while true
 				begin
-					expr = parse_any tokens, [:parse_literal, :parse_string_expression]
+					expr = parse_any cursor, [:parse_literal, :parse_string_expression]
 					exprs << expr
-				rescue Object => e
+				rescue => e
 					break
 				end
 			end
@@ -118,65 +152,66 @@ module Parsing
 			return Expressions::StringExpression.new exprs
 		end
 
-		def parse_body(tokens)
+		def parse_body(cursor)
 			body = []
-			while not tokens.empty? and tokens[0] != "}"
-				statement = parse_statement tokens
+			while not cursor.empty? and cursor[0] != "}"
+				statement = parse_statement cursor
 				body << statement
 			end
 			return Statements::Block.new body
 		end
 
-		def parse_block(tokens)
-			expect "{", tokens
-			body = parse_body tokens
-			expect "}", tokens
+		def parse_block(cursor)
+			expect "{", cursor
+			body = parse_body cursor
+			expect "}", cursor
 			return body
 		end
 
-		def parse_expression(tokens)
-			parse_any tokens, [:parse_call, :parse_string, :parse_literal, :parse_identifier]
+		def parse_expression(cursor)
+			parse_any cursor, [:parse_call, :parse_string, :parse_literal, :parse_identifier]
 		end
 
-		def parse_set_var(tokens)
-			expect "set", tokens
-			name	= parse_identifier tokens
-			value	= parse_expression tokens
+		def parse_set_var(cursor)
+			expect "set", cursor
+			name	= parse_identifier cursor
+			value	= parse_expression cursor
 			return Statements::SetVar.new name, value
 		end
 
-		def parse_statement(tokens)
-			parse_any tokens, [:parse_scope_definition, :parse_proc_definition, :parse_set_var, :parse_expression]
+		def parse_statement(cursor)
+			parse_any cursor, [:parse_scope_definition, :parse_proc_definition, :parse_set_var, :parse_expression]
 		end
 
-		def parse_proc_definition(tokens)
-			expect "proc", tokens
+		def parse_proc_definition(cursor)
+			expect "proc", cursor
 
-			name		= parse_identifier tokens
-			parameters	= parse_parameter_declaration tokens
-			body		= parse_block tokens
+			name		= parse_identifier cursor
+			parameters	= parse_parameter_declaration cursor
+			body		= parse_block cursor
 
 			return Statements::ProcDefinition.new name, parameters, body
 		end
 
-		def parse_scope_definition(tokens)
-			expect "scope", tokens
-			name	= parse_identifier tokens
-			body	= parse_block tokens
+		def parse_scope_definition(cursor)
+			expect "scope", cursor
+			name	= parse_identifier cursor
+			body	= parse_block cursor
 			return Statements::ScopeDefinition.new name, body
 		end
 
 		def parse(tokens)
+			cursor = Cursor.new tokens
 			begin
-				parse_body tokens
-			rescue Object => e
-				puts tokens.to_s
+				parse_body cursor
+			rescue => e
+				puts cursor.to_s
 				throw e
 			end
 		end
 	end
 
-	def Parsing.parse(tokens)
-		Parsing::Parser.new.parse(tokens)
+	def Parsing.parse(cursor)
+		Parsing::Parser.new.parse(cursor)
 	end
 end
