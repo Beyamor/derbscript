@@ -8,15 +8,17 @@ module Evaling
 	def Evaling.run(parse_tree)
 		open_files = {}
 
-		global_scope			= Environment::Scope.new nil
-		global_scope["printFoo"]	= Primitives::BlockFunction.new {puts "foo"}
-		global_scope["println"]		= Primitives::BlockFunction.new {|x| puts x}
-		global_scope["print"]		= Primitives::BlockFunction.new {|x| print x}
-		global_scope["open"]		= Primitives::BlockFunction.new {|which| open_files[which] = File.open which, "w"}
-		global_scope["write"]		= Primitives::BlockFunction.new {|which, text| open_files[which].write text}
-		global_scope["close"]		= Primitives::BlockFunction.new {|which| open_files[which].close}
-		global_scope["readln"]		= Primitives::BlockFunction.new { $stdin.gets.chomp }
-		global_scope["str"]		= Primitives::BlockFunction.new {|x| x.to_s }
+		global_scope = Environment::Scope.new nil
+		global_scope.define({
+			"printFoo"	=> Primitives::BlockFunction.new {puts "foo"},
+			"println"	=> Primitives::BlockFunction.new {|x| puts x},
+			"open"		=> Primitives::BlockFunction.new {|which| open_files[which] = File.open which, "w"},
+			"write"		=> Primitives::BlockFunction.new {|which, text| open_files[which].write text},
+			"close"		=> Primitives::BlockFunction.new {|which| open_files[which].close},
+			"readln"	=> Primitives::BlockFunction.new { $stdin.gets.chomp },
+			"str"		=> Primitives::BlockFunction.new {|x| x.to_s }
+
+		})
 
 		Evaling.eval parse_tree, global_scope
 

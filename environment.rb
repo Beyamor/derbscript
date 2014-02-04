@@ -21,6 +21,10 @@ module Environment
 			end
 		end
 
+		def define(vars)
+			vars.each {|name, value| self[name] = value}
+		end
+
 		def to_s()
 			s = @vars.keys.to_s
 			if @parent
