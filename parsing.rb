@@ -5,6 +5,7 @@ module Parsing
 	IDENTIFIER_PATTERN	= /^[a-zA-Z_][a-zA-Z_0-9]*(:[a-zA-Z_][a-zA-Z_0-9]*)*$/
 	STRING_PATTERN		= /^".*"$/
 	NUMBER_PATTERN		= /^-?\d+(\.\d+)?$/
+	OPERATORS		= ["==", "!=", ">", ">=", "<", "<="]
 
 	class Cursor
 		attr_reader :position
@@ -197,8 +198,36 @@ module Parsing
 			return body
 		end
 
+		def parse_operator(cursor)
+			token = cursor.shift
+			if OPERATORS.member? token
+				return token
+			else
+				throw "Unknown operator #{token}"
+			end
+		end
+
+		def parse_operator_usage(cursor)
+			lhs		= parse_sub_expression cursor
+			operator	= parse_operator cursor
+			rhs		= parse_sub_expression cursor
+			return Expressions::OperatorCall.new operator, lhs, rhs
+		end
+
+		def parse_sub_expression(cursor)
+			parse_any cursor, [
+				:parse_call,
+				:parse_string,
+				:parse_literal,
+				:parse_identifier
+			]
+		end
+
 		def parse_expression(cursor)
-			parse_any cursor, [:parse_call, :parse_string, :parse_literal, :parse_identifier]
+			parse_any cursor, [
+				:parse_operator_usage,
+				:parse_sub_expression
+			]
 		end
 
 		def parse_set_var(cursor)
@@ -208,8 +237,29 @@ module Parsing
 			return Statements::SetVar.new name, value
 		end
 
+		def parse_block_or_statement(cursor)
+			parse_any cursor, [:parse_statement, :parse_block]
+		end
+
+		def parse_if(cursor)
+			expect "if", cursor
+			expect "(", cursor
+			condition = parse_expression cursor
+			expect ")", cursor
+			if_true = parse_block_or_statement cursor
+			expect "else", cursor
+			if_false = parse_block_or_statement cursor
+			return Statements::If.new condition, if_true, if_false
+		end
+
 		def parse_statement(cursor)
-			parse_any cursor, [:parse_scope_definition, :parse_proc_definition, :parse_set_var, :parse_expression]
+			parse_any cursor, [
+				:parse_scope_definition,
+				:parse_proc_definition,
+				:parse_set_var,
+				:parse_if,
+				:parse_expression
+			]
 		end
 
 		def parse_proc_definition(cursor)

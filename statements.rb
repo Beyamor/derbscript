@@ -48,4 +48,20 @@ module Statements
 			@statements.each {|s| Evaling.eval s, scope}
 		end
 	end
+
+	class If
+		def initialize(condition, if_true, if_false)
+			@condition	= condition
+			@if_true	= if_true
+			@if_false	= if_false
+		end
+
+		def eval(scope)
+			if Evaling.eval(@condition, scope)
+				Evaling.eval @if_true, scope
+			else
+				Evaling.eval @if_false, scope
+			end
+		end
+	end
 end

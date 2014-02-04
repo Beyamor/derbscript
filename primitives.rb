@@ -38,5 +38,9 @@ module Primitives
 		def eval(scope)
 			@value
 		end
+
+		def to_s
+			"#{@value.class.to_s}:#{@value}"
+		end
 	end
 end

@@ -43,4 +43,28 @@ module Expressions
 			result = @expressions.map{|e| Evaling.eval e, scope}.join
 		end
 	end
+
+	OPERATORS = {
+		"=="	=> lambda {|x, y| x == y},
+		"!="	=> lambda {|x, y| x != y},
+		">"	=> lambda {|x, y| x > y},
+		">="	=> lambda {|x, y| x >= y},
+		"<"	=> lambda {|x, y| x < y},
+		"<="	=> lambda {|x, y| x <= y}
+	}
+
+	class OperatorCall
+		def initialize(operator, lhs, rhs)
+			@operator	= operator
+			@lhs		= lhs
+			@rhs		= rhs
+		end
+
+		def eval(scope)
+			lhs	= Evaling.eval @lhs, scope
+			rhs	= Evaling.eval @rhs, scope
+
+			OPERATORS[@operator].call lhs, rhs
+		end
+	end
 end
