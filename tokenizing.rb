@@ -29,6 +29,11 @@ module Tokenizing
 				token << "\""
 				push_token.call
 
+			elsif char == "@"
+				while char != "\n"
+					char = text.shift
+				end
+
 			elsif SPECIAL_SYMBOLS.member? char
 				push_token.call
 				token = char
