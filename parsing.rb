@@ -4,6 +4,7 @@ require_relative "expressions"
 module Parsing
 	IDENTIFIER_PATTERN	= /^[a-zA-Z_][a-zA-Z_0-9]*(:[a-zA-Z_][a-zA-Z_0-9]*)*$/
 	STRING_PATTERN		= /^".*"$/
+	NUMBER_PATTERN		= /^-?\d+(\.\d+)?$/
 
 	class Cursor
 		attr_reader :position
@@ -53,6 +54,10 @@ module Parsing
 			 STRING_PATTERN =~ token
 		end
 
+		def is_number?(token)
+			NUMBER_PATTERN =~ token
+		end
+
 		def expect(expectation, cursor)
 			actual	= cursor.shift
 			throw "#{actual} isn't #{expectation}" unless actual == expectation
@@ -75,7 +80,7 @@ module Parsing
 				if cursor[0] == ","
 					cursor.shift
 				elsif cursor[0] != ")"
-					throw :malformed_parameter_declaration
+					throw :malformed_parameter_declarations
 				end
 			end
 
@@ -84,8 +89,23 @@ module Parsing
 			return result
 		end
 
-		def parse_parameter_declaration(cursor)
-			return parse_paramter_list cursor, :parse_identifier
+		def parse_type(cursor)
+			type = cursor.shift
+			if ["Number", "String"].member? type
+				return type
+			else
+				throw "Unknown type #{type}"
+			end
+		end
+
+		def parse_param_declartation(cursor)
+			type		= parse_type cursor
+			identifier	= parse_identifier cursor	
+			return identifier
+		end
+
+		def parse_parameter_declarations(cursor)
+			return parse_paramter_list cursor, :parse_param_declartation
 		end
 
 		def parse_call_parameters(cursor)
@@ -108,8 +128,17 @@ module Parsing
 			end
 		end
 
+		def parse_number_literal(cursor)
+			token = cursor.shift
+			if is_number? token
+				return Primitives::Literal.new token.to_f
+			else
+				throw :couldnt_parse_number
+			end
+		end
+
 		def parse_literal(cursor)
-			parse_any cursor, [:parse_string_literal]
+			parse_any cursor, [:parse_string_literal, :parse_number_literal]
 		end
 
 		def parse_any(original_cursor, parses)
@@ -187,7 +216,7 @@ module Parsing
 			expect "proc", cursor
 
 			name		= parse_identifier cursor
-			parameters	= parse_parameter_declaration cursor
+			parameters	= parse_parameter_declarations cursor
 			body		= parse_block cursor
 
 			return Statements::ProcDefinition.new name, parameters, body
