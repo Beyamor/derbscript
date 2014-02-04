@@ -2,7 +2,18 @@ require_relative "statements"
 require_relative "expressions"
 
 module Parsing
+	IDENTIFIER_PATTERN	= /^[a-zA-Z_][a-zA-Z_0-9]*(:[a-zA-Z_][a-zA-Z_0-9]*)*$/
+	STRING_PATTERN		= /^".*"$/
+
 	class Parser
+		def is_identifier?(name)
+			 IDENTIFIER_PATTERN =~ name
+		end
+
+		def is_string?(token)
+			 STRING_PATTERN =~ token
+		end
+
 		def expect(expectation, tokens)
 			actual	= tokens.shift
 			throw "#{actual} isn't #{expectation}" unless actual == expectation
@@ -107,21 +118,6 @@ module Parsing
 			return Expressions::StringExpression.new exprs
 		end
 
-		def parse_expression(tokens)
-			parse_any tokens, [:parse_call, :parse_string, :parse_literal, :parse_identifier]
-		end
-
-		def parse_set_var(tokens)
-			expect "set", tokens
-			name	= parse_identifier tokens
-			value	= parse_expression tokens
-			return Statements::SetVar.new name, value
-		end
-
-		def parse_statement(tokens)
-			parse_any tokens, [:parse_scope_definition, :parse_proc_definition, :parse_set_var, :parse_expression]
-		end
-
 		def parse_body(tokens)
 			body = []
 			while not tokens.empty? and tokens[0] != "}"
@@ -136,6 +132,21 @@ module Parsing
 			body = parse_body tokens
 			expect "}", tokens
 			return body
+		end
+
+		def parse_expression(tokens)
+			parse_any tokens, [:parse_call, :parse_string, :parse_literal, :parse_identifier]
+		end
+
+		def parse_set_var(tokens)
+			expect "set", tokens
+			name	= parse_identifier tokens
+			value	= parse_expression tokens
+			return Statements::SetVar.new name, value
+		end
+
+		def parse_statement(tokens)
+			parse_any tokens, [:parse_scope_definition, :parse_proc_definition, :parse_set_var, :parse_expression]
 		end
 
 		def parse_proc_definition(tokens)
@@ -153,14 +164,6 @@ module Parsing
 			name	= parse_identifier tokens
 			body	= parse_block tokens
 			return Statements::ScopeDefinition.new name, body
-		end
-
-		def is_identifier?(name)
-			/^[a-zA-Z_][a-zA-Z_0-9]*(:[a-zA-Z_][a-zA-Z_0-9]*)*$/ =~ name
-		end
-
-		def is_string?(token)
-			/^".*"$/ =~ token
 		end
 
 		def parse(tokens)
