@@ -6,6 +6,62 @@ module Parsing
 	STRING_PATTERN		= /^".*"$/
 	NUMBER_PATTERN		= /^-?\d+(\.\d+)?$/
 	OPERATORS		= ["==", "!=", ">", ">=", "<", "<="]
+	PRECEDENCES = {
+		"ADDITION"		=> 3,
+		"SUBTRACTION"		=> 3,
+		"MULTIPLICATION"	=> 4,
+		"PREFIX"		=> 7
+	}
+
+	class Expression
+		def initialize(name, *children)
+			@name		= name
+			@children	= children
+		end
+
+		def to_s
+			s = "(#{@name}"
+			@children.each {|child| s += " " + child.to_s}
+			s += ")"
+			return s
+		end
+	end
+
+	class IdentifierExpression
+		def initialize(name)
+			@name = name
+		end
+
+		def to_s
+			@name
+		end
+	end
+
+	class IdentifierParslet
+		def parse(parser, token)
+			IdentifierExpression.new token.text
+		end
+	end
+
+	class PrefixOperatorParslet
+		def parse(parser, token)
+			operand = parser.parse_expression PRECEDENCES["PREFIX"]
+			return Expression.new token.type, operand
+		end
+	end
+
+	class BinaryOperatorParselet
+		attr_reader :precedence
+
+		def initialize(precedence)
+			@precedence = precedence
+		end
+
+		def parse(parser, left, token)
+			right = parser.parse_expression @precedence
+			return Expression.new token.type, left, right
+		end
+	end
 
 	class Cursor
 		attr_reader :position
@@ -44,253 +100,81 @@ module Parsing
 		def move_to(other)
 			@position = other.position
 		end
+
+		def at_end?
+			@position >= @tokens.length
+		end
+
+		def token
+			@tokens[@position]
+		end
 	end
 
-	class Parser
-		def is_identifier?(name)
-			 IDENTIFIER_PATTERN =~ name
+	class Parser		
+		def initialize
+			@prefix_parselets	= {}
+			@infix_parselets	= {}
 		end
 
-		def is_string?(token)
-			 STRING_PATTERN =~ token
+		def register_prefix(token_type, prefix_parselet)
+			@prefix_parselets[token_type] = prefix_parselet
 		end
 
-		def is_number?(token)
-			NUMBER_PATTERN =~ token
+		def register_infix(token_type, infix_parselet)
+			@infix_parselets[token_type] = infix_parselet
 		end
 
-		def expect(expectation, cursor)
-			actual	= cursor.shift
-			throw "#{actual} isn't #{expectation}" unless actual == expectation
+		def prefix(token_type)
+			register_prefix token_type, PrefixOperatorParslet.new
 		end
 
-		def parse_identifier(cursor)
-			name = cursor.shift
-			throw :missing_identifier unless is_identifier? name
-			return Expressions::Identifier.new name
+		def prefixes(*token_types)
+			token_types.each {|token_type| prefix token_type}
 		end
 
-		def parse_paramter_list(cursor, param_parser)
-			expect "(", cursor
+		def current_precedence
+			parselet = @infix_parselets[@cursor.token.type]
 
-			result = []
-			while not cursor.empty? and cursor[0] != ")"
-				param = send param_parser, cursor
-				result << param
-
-				if cursor[0] == ","
-					cursor.shift
-				elsif cursor[0] != ")"
-					throw :malformed_parameter_declarations
-				end
-			end
-
-			expect ")", cursor
-
-			return result
-		end
-
-		def parse_type(cursor)
-			type = cursor.shift
-			if ["Number", "String"].member? type
-				return type
+			if parselet
+				parselet.precedence
 			else
-				throw "Unknown type #{type}"
+				0
 			end
 		end
 
-		def parse_param_declartation(cursor)
-			type		= parse_type cursor
-			identifier	= parse_identifier cursor	
-			return identifier
-		end
+		def parse_expression(min_precedence)
+			token	= @cursor.shift
+			prefix	= @prefix_parselets[token.type]
+			throw "Could not parse #{token.text}" unless prefix
 
-		def parse_parameter_declarations(cursor)
-			return parse_paramter_list cursor, :parse_param_declartation
-		end
-
-		def parse_call_parameters(cursor)
-			return parse_paramter_list cursor, :parse_expression
-		end
-
-		def parse_call(cursor)
-			name		= parse_identifier cursor
-			parameters	= parse_call_parameters cursor
-
-			return Expressions::Call.new name, parameters
-		end
-
-		def parse_string_literal(cursor)
-			token = cursor.shift
-			if is_string? token
-				return Primitives::Literal.new token[1...-1]
-			else
-				throw :couldnt_parse_string
-			end
-		end
-
-		def parse_number_literal(cursor)
-			token = cursor.shift
-			if is_number? token
-				return Primitives::Literal.new token.to_f
-			else
-				throw :couldnt_parse_number
-			end
-		end
-
-		def parse_literal(cursor)
-			parse_any cursor, [:parse_string_literal, :parse_number_literal]
-		end
-
-		def parse_any(original_cursor, parses)
-			until parses.empty?
-				parse = parses.shift
-
-				begin
-					working_cursor	= original_cursor.dup
-					result		= send parse, working_cursor
-
-					original_cursor.move_to working_cursor
-					return result
-
-				rescue Object => e
-					throw e if parses.empty?
-				end
-			end
-		end
-
-		def parse_string_expression(cursor)
-			expect "[", cursor
-			expression = parse_expression cursor
-			expect "]", cursor
-			return expression
-		end
-
-		def parse_string(cursor)
-			first_expr	= parse_any cursor, [:parse_string_literal, :parse_string_expression]
-			exprs		= [first_expr]
-
-			while true
-				begin
-					expr = parse_any cursor, [:parse_literal, :parse_string_expression]
-					exprs << expr
-				rescue => e
-					break
-				end
+			left = prefix.parse self, token
+			while min_precedence < current_precedence
+				token	= @cursor.shift
+				infix	= @infix_parselets[token.type]
+				left	= infix.parse self, left, token
 			end
 
-			return Expressions::StringExpression.new exprs
-		end
-
-		def parse_body(cursor)
-			body = []
-			while not cursor.empty? and cursor[0] != "}"
-				statement = parse_statement cursor
-				body << statement
-			end
-			return Statements::Block.new body
-		end
-
-		def parse_block(cursor)
-			expect "{", cursor
-			body = parse_body cursor
-			expect "}", cursor
-			return body
-		end
-
-		def parse_operator(cursor)
-			token = cursor.shift
-			if OPERATORS.member? token
-				return token
-			else
-				throw "Unknown operator #{token}"
-			end
-		end
-
-		def parse_operator_usage(cursor)
-			lhs		= parse_sub_expression cursor
-			operator	= parse_operator cursor
-			rhs		= parse_sub_expression cursor
-			return Expressions::OperatorCall.new operator, lhs, rhs
-		end
-
-		def parse_sub_expression(cursor)
-			parse_any cursor, [
-				:parse_call,
-				:parse_string,
-				:parse_literal,
-				:parse_identifier
-			]
-		end
-
-		def parse_expression(cursor)
-			parse_any cursor, [
-				:parse_operator_usage,
-				:parse_sub_expression
-			]
-		end
-
-		def parse_set_var(cursor)
-			expect "set", cursor
-			name	= parse_identifier cursor
-			value	= parse_expression cursor
-			return Statements::SetVar.new name, value
-		end
-
-		def parse_block_or_statement(cursor)
-			parse_any cursor, [:parse_statement, :parse_block]
-		end
-
-		def parse_if(cursor)
-			expect "if", cursor
-			expect "(", cursor
-			condition = parse_expression cursor
-			expect ")", cursor
-			if_true = parse_block_or_statement cursor
-			expect "else", cursor
-			if_false = parse_block_or_statement cursor
-			return Statements::If.new condition, if_true, if_false
-		end
-
-		def parse_statement(cursor)
-			parse_any cursor, [
-				:parse_scope_definition,
-				:parse_proc_definition,
-				:parse_set_var,
-				:parse_if,
-				:parse_expression
-			]
-		end
-
-		def parse_proc_definition(cursor)
-			expect "proc", cursor
-
-			name		= parse_identifier cursor
-			parameters	= parse_parameter_declarations cursor
-			body		= parse_block cursor
-
-			return Statements::ProcDefinition.new name, parameters, body
-		end
-
-		def parse_scope_definition(cursor)
-			expect "scope", cursor
-			name	= parse_identifier cursor
-			body	= parse_block cursor
-			return Statements::ScopeDefinition.new name, body
+			return left
 		end
 
 		def parse(tokens)
-			cursor = Cursor.new tokens
-			begin
-				parse_body cursor
-			rescue => e
-				puts cursor.to_s
-				throw e
-			end
+			@cursor = Cursor.new tokens
+			parse_expression 0
 		end
 	end
 
-	def Parsing.parse(cursor)
-		Parsing::Parser.new.parse(cursor)
+	PARSER = Parser.new
+	PARSER.register_prefix :identifier, IdentifierParslet.new
+	PARSER.prefixes :+, :-
+		[
+			[:+, "ADDITION"],
+			[:-, "SUBTRACTION"],
+			[:*, "MULTIPLICATION"]
+	].each do |symbol, precedence|
+		PARSER.register_infix symbol, BinaryOperatorParselet.new(PRECEDENCES[precedence])
+	end
+
+	def Parsing.parse(tokens)
+		PARSER.parse tokens
 	end
 end

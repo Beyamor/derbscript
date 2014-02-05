@@ -6,4 +6,5 @@ require_relative "evaling"
 contents	= File.read ARGV[0]
 tokens		= Tokenizing.tokenize contents
 parse_result	= Parsing.parse tokens
-Evaling.run parse_result
+puts parse_result.to_s
+#Evaling.run parse_result
