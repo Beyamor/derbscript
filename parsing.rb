@@ -2,10 +2,6 @@ require_relative "statements"
 require_relative "expressions"
 
 module Parsing
-	IDENTIFIER_PATTERN	= /^[a-zA-Z_][a-zA-Z_0-9]*(:[a-zA-Z_][a-zA-Z_0-9]*)*$/
-	STRING_PATTERN		= /^".*"$/
-	NUMBER_PATTERN		= /^-?\d+(\.\d+)?$/
-	OPERATORS		= ["==", "!=", ">", ">=", "<", "<="]
 	PRECEDENCES = {
 		"ADDITION"		=> 3,
 		"SUBTRACTION"		=> 3,
