@@ -63,7 +63,6 @@ module Parsing
 		end
 
 		def parse(parser, left, token)
-			puts "parsing binary operator #{token.type}"
 			right = parser.parse_expression @precedence
 			return Expression.new token.type, left, right
 		end
@@ -152,14 +151,12 @@ module Parsing
 
 		def parse_expression(min_precedence=0)
 			token	= @cursor.shift
-			puts "#{token}"
 			prefix	= @prefix_parselets[token.type]
 			throw "Could not parse #{token.type}:#{token.text}" unless prefix
 
 			left = prefix.parse self, token
 			while min_precedence < current_precedence
 				token	= @cursor.shift
-				puts "	#{token}"
 				infix	= @infix_parselets[token.type]
 				left	= infix.parse self, left, token
 			end
