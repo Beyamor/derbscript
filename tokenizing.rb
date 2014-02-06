@@ -16,7 +16,11 @@ module Tokenizing
 		end
 
 		def to_s
-			"#{type}(#{text})"
+			if @text
+				"#{@type}(#{@text})"
+			else
+				@type
+			end
 		end
 	end
 

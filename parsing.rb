@@ -127,9 +127,30 @@ module Parsing
 			return left
 		end
 
+		def parse_statement
+			parse_expression
+		end
+
+		def parse_program
+			statements = []
+			while true
+				while next_token.type == :terminator
+					@tokens.shift
+				end
+
+				if @tokens.empty? or next_token.type == :end
+					break
+				end
+
+				statement = parse_statement
+				statements << statement
+			end
+			return Statements::Block.new statements
+		end
+
 		def parse(tokens)
 			@tokens = tokens
-			parse_expression
+			parse_program
 		end
 
 		def expect(token_type)

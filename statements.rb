@@ -1,6 +1,7 @@
 require_relative "primitives"
 require_relative "evaling"
 require_relative "environment"
+require_relative "util"
 
 module Statements
 	class ProcDefinition
@@ -46,6 +47,10 @@ module Statements
 
 		def eval(scope)
 			@statements.each {|s| Evaling.eval s, scope}
+		end
+
+		def to_s
+			Util.sexpr "do-block", *@statements
 		end
 	end
 
