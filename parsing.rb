@@ -3,6 +3,10 @@ require_relative "expressions"
 
 module Parsing
 	PRECEDENCES = {
+		">"		=> 2,
+		">="		=> 2,
+		"<"		=> 2,
+		"<="		=> 2,
 		"+"		=> 3,
 		"-"		=> 3,
 		"*"		=> 4,
@@ -240,12 +244,29 @@ module Parsing
 			return Statements::SetVar.new name, value
 		end
 
+		def parse_if
+			expect_text "if"
+			devour_terminators
+			expect "("
+			condition = parse_expression
+			expect ")"
+			devour_terminators
+			if_true = parse_statement # TODO block_or_statement
+			devour_terminators
+			expect_text "else" # TODO optation else
+			devour_terminators
+			if_false = parse_statement # TODO block_or_statement
+			return Statements::If.new condition, if_true, if_false
+		end
+
 		def parse_statement
 			case next_token.text
 			when "proc"
 				parse_proc_definition
 			when "set"
 				parse_set
+			when "if"
+				parse_if
 			else
 				expression = parse_expression
 				expect :terminator
@@ -279,7 +300,7 @@ module Parsing
 	PARSER.register_prefix :number, NumberParslet.new
 	PARSER.register_prefix "(", ParensParslet.new
 	PARSER.prefixes "+", "-"
-	["+", "-", "*", "\\"].each do |operator|
+	["+", "-", "*", "\\", ">", "<", ">=", "<="].each do |operator|
 		PARSER.register_infix operator, BinaryOperatorParselet.new(PRECEDENCES[operator])
 	end
 	PARSER.register_infix "(", CallParselet.new

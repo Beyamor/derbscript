@@ -1,9 +1,9 @@
 module Tokenizing
 	COMMENT			= /\A(@.*?$)/
 	SPECIAL_SYMBOLS		= /\A(\(|\)|\[|\]|=|\{|\}|,)/
-	OPERATORS		= /\A(\+|-|\*|\/)/
+	OPERATORS		= /\A(\+|-|\*|\/|>|>=|<|<=|==)/
 	WHITESPACE		= /\A(( |\t)+)/
-	IDENTIFIER		= /\A([a-zA-Z_][a-zA-Z_0-9]*)/
+	IDENTIFIER		= /\A([a-zA-Z_][a-zA-Z_0-9]*(:[a-zA-Z_][a-zA-Z_0-9]*)*)/
 	TERMINATOR		= /\A(\n|\r\n|\n\r)/
 	NUMBER			= /\A([0-9]+(\.[0-9]+)?)/
 	STRING			= /\A(".*?")/
