@@ -44,7 +44,7 @@ module Statements
 		end
 
 		def to_s
-			Util.sexpr "set", @name, @value
+			Util.sexpr "set-string", @name, @value
 		end
 	end
 
@@ -75,6 +75,23 @@ module Statements
 			else
 				Evaling.eval @if_false, scope
 			end
+		end
+	end
+
+	class While
+		def initialize(condition, body)
+			@condition	= condition
+			@body		= body
+		end
+
+		def eval(scope)
+			while Evaling.eval @condition, scope
+				Evaling.eval @body, scope
+			end
+		end
+
+		def to_s
+			Util.sexpr "while", @condition, @body
 		end
 	end
 end

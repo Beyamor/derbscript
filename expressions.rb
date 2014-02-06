@@ -46,8 +46,8 @@ module Expressions
 		end
 
 		def eval(scope)
-			@params.map! {|p| Evaling.eval p, scope}
-			@name.eval(scope).call(@params)
+			params = @params.map {|p| Evaling.eval p, scope}
+			@name.eval(scope).call(params)
 		end
 
 		def to_s
@@ -114,7 +114,7 @@ module Expressions
 		end
 
 		def to_s
-			Util.sexpr "set", @var, @value
+			Util.sexpr "set-number", @var, @value
 		end
 	end
 end

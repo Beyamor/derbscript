@@ -2,7 +2,11 @@ require_relative "environment"
 
 module Evaling
 	def Evaling.eval(thing, scope)
-		thing.eval scope
+		if thing.respond_to? :eval
+			thing.eval scope
+		else
+			thing
+		end
 	end
 
 	def Evaling.run(parse_tree)

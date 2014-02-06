@@ -263,12 +263,23 @@ module Parsing
 			condition = parse_expression
 			expect ")"
 			devour_terminators
-			if_true = parse_statement # TODO block_or_statement
+			if_true = parse_block_or_statement
 			devour_terminators
 			expect_text "else" # TODO optation else
 			devour_terminators
-			if_false = parse_statement # TODO block_or_statement
+			if_false = parse_block_or_statement
 			return Statements::If.new condition, if_true, if_false
+		end
+
+		def parse_while
+			expect_text "while"
+			devour_terminators
+			expect "("
+			condition = parse_expression
+			expect ")"
+			devour_terminators
+			body = parse_block_or_statement
+			return Statements::While.new condition, body
 		end
 
 		def parse_statement
@@ -279,10 +290,20 @@ module Parsing
 				parse_set
 			when "if"
 				parse_if
+			when "while"
+				parse_while
 			else
 				expression = parse_expression
 				expect :terminator
 				return expression
+			end
+		end
+
+		def parse_block_or_statement
+			if next_token.type == "{"
+				parse_block
+			else
+				parse_statement
 			end
 		end
 
