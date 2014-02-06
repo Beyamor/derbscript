@@ -12,17 +12,6 @@ module Tokenizing
 	IDENTIFIER		= /^([a-zA-Z_][a-zA-Z_0-9]*)/
 	TERMINATOR		= /^(\n|\r\n|\n\r)/
 
-	SPECIAL_SYMBOL_SYMBOLS = {
-		"("	=> :open_paren,
-		")"	=> :close_paren,
-		"{"	=> :open_gull,
-		"}"	=> :close_gull,
-		"["	=> :open_square,
-		"]"	=> :close_square,
-		"="	=> :equals,
-		","	=> :comma
-	}
-
 	class Token
 		attr_reader :type, :text
 
@@ -46,12 +35,12 @@ module Tokenizing
 			when SPECIAL_SYMBOLS
 				symbol = $1
 				text.remove_prefix! symbol
-				token = Token.new SPECIAL_SYMBOL_SYMBOLS[symbol], symbol
+				token = Token.new symbol, nil
 				tokens << token
 			when OPERATORS
 				operator = $1
 				text.remove_prefix! operator
-				token = Token.new operator.to_sym, operator
+				token = Token.new operator, nil
 				tokens << token
 			when IDENTIFIER
 				name = $1

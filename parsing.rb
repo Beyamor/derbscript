@@ -3,10 +3,10 @@ require_relative "expressions"
 
 module Parsing
 	PRECEDENCES = {
-		:+		=> 3,
-		:-		=> 3,
-		:*		=> 4,
-		"\\".to_sym	=> 4,
+		"+"		=> 3,
+		"-"		=> 3,
+		"*"		=> 4,
+		"\\"		=> 4,
 		"PREFIX"	=> 7,
 	}
 
@@ -43,7 +43,7 @@ module Parsing
 	class ParensParslet
 		def parse(parser, token)
 			expression = parser.parse_expression
-			parser.expect :close_paren
+			parser.expect ")"
 			return expression
 		end
 	end
@@ -68,56 +68,7 @@ module Parsing
 		end
 	end
 
-	class Cursor
-		attr_reader :position
-
-		def initialize(tokens, position=0)
-			@tokens		= tokens
-			@position	= position
-		end
-
-		def [](value)
-			@tokens[@position + value]
-		end
-
-		def shift
-			value = @tokens[@position]
-			@position += 1
-			return value
-		end
-
-		def empty?
-			@position >= @tokens.length
-		end
-
-		def dup
-			Cursor.new @tokens, @position
-		end
-
-		def to_s
-			@tokens[@position..-1].to_s
-		end
-
-		def length
-			@tokens.length - @position
-		end
-
-		def move_to(other)
-			@position = other.position
-		end
-
-		def at_end?
-			@position >= @tokens.length
-		end
-
-		def token
-			@tokens[@position]
-		end
-	end
-
 	class Parser		
-		attr_reader :cursor
-
 		def initialize
 			@prefix_parselets	= {}
 			@infix_parselets	= {}
@@ -139,8 +90,12 @@ module Parsing
 			token_types.each {|token_type| prefix token_type}
 		end
 
-		def current_precedence
-			parselet = @infix_parselets[@cursor.token.type]
+		def next_token
+			@tokens[0]
+		end
+
+		def next_precedence
+			parselet = @infix_parselets[next_token.type]
 
 			if parselet
 				parselet.precedence
@@ -150,13 +105,13 @@ module Parsing
 		end
 
 		def parse_expression(min_precedence=0)
-			token	= @cursor.shift
+			token	= @tokens.shift
 			prefix	= @prefix_parselets[token.type]
 			throw "Could not parse #{token.type}:#{token.text}" unless prefix
 
 			left = prefix.parse self, token
-			while min_precedence < current_precedence
-				token	= @cursor.shift
+			while min_precedence < next_precedence
+				token	= @tokens.shift
 				infix	= @infix_parselets[token.type]
 				left	= infix.parse self, left, token
 			end
@@ -165,21 +120,21 @@ module Parsing
 		end
 
 		def parse(tokens)
-			@cursor = Cursor.new tokens
+			@tokens = tokens
 			parse_expression
 		end
 
 		def expect(token_type)
-			token = @cursor.shift
+			token = @tokens.shift
 			throw "Expected #{token_type} but got #{token.type}" unless token.type == token_type
 		end	
 	end
 
 	PARSER = Parser.new
 	PARSER.register_prefix :name, NameParslet.new
-	PARSER.register_prefix :open_paren, ParensParslet.new
-	PARSER.prefixes :+, :-
-	[:+, :-, :*, "\\".to_sym].each do |operator|
+	PARSER.register_prefix "(", ParensParslet.new
+	PARSER.prefixes "+", "-"
+	["+", "-", "*", "\\".to_sym].each do |operator|
 		PARSER.register_infix operator, BinaryOperatorParselet.new(PRECEDENCES[operator])
 	end
 
