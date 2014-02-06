@@ -8,6 +8,7 @@ module Parsing
 		"*"		=> 4,
 		"\\"		=> 4,
 		"PREFIX"	=> 7,
+		"CALL"		=> 10
 	}
 
 	class Expression
@@ -65,6 +66,25 @@ module Parsing
 		def parse(parser, left, token)
 			right = parser.parse_expression @precedence
 			return Expression.new token.type, left, right
+		end
+	end
+
+	class CallParselet
+		def precedence
+			PRECEDENCES["CALL"]
+		end
+
+		def parse(parser, name, token)
+			arguments = []
+			while parser.next_token.type != ")"
+				argument = parser.parse_expression
+				arguments << argument
+				if parser.next_token.type != ")"
+					parser.expect ","
+				end
+			end
+			parser.expect ")"
+			return Expression.new name, *arguments
 		end
 	end
 
@@ -134,9 +154,10 @@ module Parsing
 	PARSER.register_prefix :name, NameParslet.new
 	PARSER.register_prefix "(", ParensParslet.new
 	PARSER.prefixes "+", "-"
-	["+", "-", "*", "\\".to_sym].each do |operator|
+	["+", "-", "*", "\\"].each do |operator|
 		PARSER.register_infix operator, BinaryOperatorParselet.new(PRECEDENCES[operator])
 	end
+	PARSER.register_infix "(", CallParselet.new
 
 	def Parsing.parse(tokens)
 		PARSER.parse tokens
