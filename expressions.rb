@@ -63,6 +63,10 @@ module Expressions
 		def eval(scope)
 			result = @expressions.map{|e| Evaling.eval e, scope}.join
 		end
+
+		def to_s
+			Util.sexpr "str", *@expressions
+		end
 	end
 
 	OPERATORS = {

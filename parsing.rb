@@ -112,7 +112,7 @@ module Parsing
 			end
 		end
 
-		def parse_expression(min_precedence=0)
+		def parse_precedence_expression(min_precedence=0)
 			token	= @tokens.shift
 			prefix	= @prefix_parselets[token.type]
 			throw "Could not parse #{token.type}:#{token.text}" unless prefix
@@ -125,6 +125,42 @@ module Parsing
 			end
 
 			return left
+		end
+
+		def parse_string_literal
+			token = @tokens.shift
+			return Expressions::Literal.new token.text
+		end
+
+		def parse_string_interpolation
+			expect "["
+			expression = parse_expression
+			expect "]"
+			return expression
+		end
+
+		def parse_string_expression
+			expressions = []
+			
+			while true
+				if next_token.type == :string
+					expressions << parse_string_literal
+				elsif next_token.type == "["
+					expressions << parse_string_interpolation
+				else
+					break
+				end
+			end
+
+			return Expressions::StringExpression.new expressions
+		end
+
+		def parse_expression(min_precedence=0)
+			if next_token.type == :string or next_token.type == "["
+				parse_string_expression
+			else
+				parse_precedence_expression(min_precedence)
+			end
 		end
 
 		def parse_block_body

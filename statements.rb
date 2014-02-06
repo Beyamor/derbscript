@@ -42,6 +42,10 @@ module Statements
 		def eval(scope)
 			scope[@name] = Evaling.eval @value, scope
 		end
+
+		def to_s
+			Util.sexpr "set", @name, @value
+		end
 	end
 
 	class Block
