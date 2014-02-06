@@ -162,11 +162,20 @@ module Parsing
 			end
 		end
 
+		def parse_type
+			token	= @tokens.shift
+			type	= token.text
+			throw "Unknown type #{type}" unless ["Number", "String"].member? type
+			return type
+		end
+
 		def parse_proc_definition_params
 			params = []
 			expect "("
 			devour_terminators
 			until next_token.type == ")"
+				# TODO actually use types
+				parse_type
 				param = parse_name
 				params << param
 				if next_token.type != ")"
