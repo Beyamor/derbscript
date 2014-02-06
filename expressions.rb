@@ -1,4 +1,5 @@
 require_relative "evaling"
+require_relative "util"
 
 module Expressions
 	class Identifier
@@ -31,6 +32,10 @@ module Expressions
 		def eval(scope)
 			@params.map! {|p| Evaling.eval p, scope}
 			@name.eval(scope).call(@params)
+		end
+
+		def to_s
+			Util.sexpr @name, *@params
 		end
 	end
 
@@ -65,6 +70,10 @@ module Expressions
 			rhs	= Evaling.eval @rhs, scope
 
 			OPERATORS[@operator].call lhs, rhs
+		end
+
+		def to_s
+			Util.sexpr @operator, @lhs, @rhs
 		end
 	end
 end

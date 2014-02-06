@@ -11,33 +11,9 @@ module Parsing
 		"CALL"		=> 10
 	}
 
-	class Expression
-		def initialize(name, *children)
-			@name		= name
-			@children	= children
-		end
-
-		def to_s
-			s = "(#{@name}"
-			@children.each {|child| s += " " + child.to_s}
-			s += ")"
-			return s
-		end
-	end
-
-	class NameExpression
-		def initialize(name)
-			@name = name
-		end
-
-		def to_s
-			@name
-		end
-	end
-
 	class NameParslet
 		def parse(parser, token)
-			NameExpression.new token.text
+			Expressions::Identifier.new token.text
 		end
 	end
 
@@ -52,7 +28,7 @@ module Parsing
 	class PrefixOperatorParslet
 		def parse(parser, token)
 			operand = parser.parse_expression PRECEDENCES["PREFIX"]
-			return Expression.new token.type, operand
+			throw "Whoa, haven't implemented prefix operators yet"
 		end
 	end
 
@@ -65,7 +41,7 @@ module Parsing
 
 		def parse(parser, left, token)
 			right = parser.parse_expression @precedence
-			return Expression.new token.type, left, right
+			return Expressions::OperatorCall.new token.type, left, right
 		end
 	end
 
@@ -84,7 +60,7 @@ module Parsing
 				end
 			end
 			parser.expect ")"
-			return Expression.new name, *arguments
+			return Expressions::Call.new name, arguments
 		end
 	end
 
