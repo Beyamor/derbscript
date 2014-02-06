@@ -1,10 +1,3 @@
-class String
-	def remove_prefix!(prefix)
-		slice! 0...prefix.length
-		return self
-	end
-end
-
 module Tokenizing
 	SPECIAL_SYMBOLS		= /^(\(|\)|\[|\]|=|\{|\}|,)/
 	OPERATORS		= /^(\+|-|\*|\/)/
@@ -33,41 +26,38 @@ module Tokenizing
 		until text.empty?
 			case text
 			when WHITESPACE
-				text.remove_prefix! $1
+				# Do nothing
 			when SPECIAL_SYMBOLS
 				symbol = $1
-				text.remove_prefix! symbol
 				token = Token.new symbol, nil
 				tokens << token
 			when OPERATORS
 				operator = $1
-				text.remove_prefix! operator
 				token = Token.new operator, nil
 				tokens << token
 			when IDENTIFIER
 				name = $1
-				text.remove_prefix! name
 				token = Token.new :name, name
 				tokens << token
 			when TERMINATOR
-				text.remove_prefix! $1
 				token = Token.new :terminator, nil
 				tokens << token
 			when NUMBER
 				number = $1
-				text.remove_prefix! number
 				token = Token.new :number, number
 				tokens << token
 			when STRING
 				string = $1
 				contents = string[1...-1]
-				text.remove_prefix! contents
 				token = Token.new :string, contents
 				tokens << token
 
 			else
 				throw "Couldn't tokenize #{text}"
 			end
+
+			# Remove whatever was matched
+			text.slice! 0...$1.length
 		end
 
 		final_token = Token.new :end, nil
