@@ -1,6 +1,6 @@
 class String
 	def remove_prefix!(prefix)
-		slice! 0..prefix.length
+		slice! 0...prefix.length
 		return self
 	end
 end
@@ -12,12 +12,27 @@ module Tokenizing
 	IDENTIFIER		= /^([a-zA-Z_][a-zA-Z_0-9]*)/
 	TERMINATOR		= /^(\n|\r\n|\n\r)/
 
+	SPECIAL_SYMBOL_SYMBOLS = {
+		"("	=> :open_paren,
+		")"	=> :close_paren,
+		"{"	=> :open_gull,
+		"}"	=> :close_gull,
+		"["	=> :open_square,
+		"]"	=> :close_square,
+		"="	=> :equals,
+		","	=> :comma
+	}
+
 	class Token
 		attr_reader :type, :text
 
 		def initialize(type, text)
 			@type	= type
 			@text	= text
+		end
+
+		def to_s
+			"#{type}(#{text})"
 		end
 	end
 
@@ -27,12 +42,11 @@ module Tokenizing
 		until text.empty?
 			case text
 			when WHITESPACE
-				whitespace = $1
-				text.remove_prefix! whitespace
+				text.remove_prefix! $1
 			when SPECIAL_SYMBOLS
 				symbol = $1
 				text.remove_prefix! symbol
-				token = Token.new symbol.to_sym, symbol
+				token = Token.new SPECIAL_SYMBOL_SYMBOLS[symbol], symbol
 				tokens << token
 			when OPERATORS
 				operator = $1
@@ -40,9 +54,9 @@ module Tokenizing
 				token = Token.new operator.to_sym, operator
 				tokens << token
 			when IDENTIFIER
-				identifier = $1
-				text.remove_prefix! identifier
-				token = Token.new :identifier, identifier
+				name = $1
+				text.remove_prefix! name
+				token = Token.new :name, name
 				tokens << token
 			when TERMINATOR
 				text.remove_prefix! $1

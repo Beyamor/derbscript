@@ -3,10 +3,11 @@ require_relative "expressions"
 
 module Parsing
 	PRECEDENCES = {
-		"ADDITION"		=> 3,
-		"SUBTRACTION"		=> 3,
-		"MULTIPLICATION"	=> 4,
-		"PREFIX"		=> 7
+		:+		=> 3,
+		:-		=> 3,
+		:*		=> 4,
+		"\\".to_sym	=> 4,
+		"PREFIX"	=> 7,
 	}
 
 	class Expression
@@ -23,7 +24,7 @@ module Parsing
 		end
 	end
 
-	class IdentifierExpression
+	class NameExpression
 		def initialize(name)
 			@name = name
 		end
@@ -33,9 +34,17 @@ module Parsing
 		end
 	end
 
-	class IdentifierParslet
+	class NameParslet
 		def parse(parser, token)
-			IdentifierExpression.new token.text
+			NameExpression.new token.text
+		end
+	end
+
+	class ParensParslet
+		def parse(parser, token)
+			expression = parser.parse_expression
+			parser.expect :close_paren
+			return expression
 		end
 	end
 
@@ -54,6 +63,7 @@ module Parsing
 		end
 
 		def parse(parser, left, token)
+			puts "parsing binary operator #{token.type}"
 			right = parser.parse_expression @precedence
 			return Expression.new token.type, left, right
 		end
@@ -107,6 +117,8 @@ module Parsing
 	end
 
 	class Parser		
+		attr_reader :cursor
+
 		def initialize
 			@prefix_parselets	= {}
 			@infix_parselets	= {}
@@ -138,14 +150,16 @@ module Parsing
 			end
 		end
 
-		def parse_expression(min_precedence)
+		def parse_expression(min_precedence=0)
 			token	= @cursor.shift
+			puts "#{token}"
 			prefix	= @prefix_parselets[token.type]
-			throw "Could not parse #{token.text}" unless prefix
+			throw "Could not parse #{token.type}:#{token.text}" unless prefix
 
 			left = prefix.parse self, token
 			while min_precedence < current_precedence
 				token	= @cursor.shift
+				puts "	#{token}"
 				infix	= @infix_parselets[token.type]
 				left	= infix.parse self, left, token
 			end
@@ -155,19 +169,21 @@ module Parsing
 
 		def parse(tokens)
 			@cursor = Cursor.new tokens
-			parse_expression 0
+			parse_expression
 		end
+
+		def expect(token_type)
+			token = @cursor.shift
+			throw "Expected #{token_type} but got #{token.type}" unless token.type == token_type
+		end	
 	end
 
 	PARSER = Parser.new
-	PARSER.register_prefix :identifier, IdentifierParslet.new
+	PARSER.register_prefix :name, NameParslet.new
+	PARSER.register_prefix :open_paren, ParensParslet.new
 	PARSER.prefixes :+, :-
-		[
-			[:+, "ADDITION"],
-			[:-, "SUBTRACTION"],
-			[:*, "MULTIPLICATION"]
-	].each do |symbol, precedence|
-		PARSER.register_infix symbol, BinaryOperatorParselet.new(PRECEDENCES[precedence])
+	[:+, :-, :*, "\\".to_sym].each do |operator|
+		PARSER.register_infix operator, BinaryOperatorParselet.new(PRECEDENCES[operator])
 	end
 
 	def Parsing.parse(tokens)
