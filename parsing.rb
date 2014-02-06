@@ -12,7 +12,8 @@ module Parsing
 		"*"		=> 4,
 		"\\"		=> 4,
 		"PREFIX"	=> 7,
-		"CALL"		=> 10
+		"CALL"		=> 10,
+		"ASSIGNMENT"	=> 1
 	}
 
 	class NumberParslet
@@ -77,6 +78,17 @@ module Parsing
 			end
 			parser.expect ")"
 			return Expressions::Call.new name, arguments
+		end
+	end
+
+	class AssignmentParselet
+		def precedence
+			PRECEDENCES["ASSIGNMENT"]
+		end
+
+		def parse(parser, var, token)
+			value = parser.parse_expression
+			return Expressions::Assignment.new var, value
 		end
 	end
 
@@ -304,6 +316,7 @@ module Parsing
 		PARSER.register_infix operator, BinaryOperatorParselet.new(PRECEDENCES[operator])
 	end
 	PARSER.register_infix "(", CallParselet.new
+	PARSER.register_infix "=", AssignmentParselet.new
 
 	def Parsing.parse(tokens)
 		PARSER.parse tokens

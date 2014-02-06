@@ -75,7 +75,11 @@ module Expressions
 		">"	=> lambda {|x, y| x > y},
 		">="	=> lambda {|x, y| x >= y},
 		"<"	=> lambda {|x, y| x < y},
-		"<="	=> lambda {|x, y| x <= y}
+		"<="	=> lambda {|x, y| x <= y},
+		"+"	=> lambda {|x, y| x + y},
+		"-"	=> lambda {|x, y| x - y},
+		"*"	=> lambda {|x, y| x * y},
+		"\\"	=> lambda {|x, y| x / y}
 	}
 
 	class OperatorCall
@@ -94,6 +98,23 @@ module Expressions
 
 		def to_s
 			Util.sexpr @operator, @lhs, @rhs
+		end
+	end
+
+	class Assignment
+		def initialize(var, value)
+			@var	= var
+			@value	= value
+		end
+
+		def eval(scope)
+			value = Evaling.eval @value, scope
+			scope[@var] = value
+			return value
+		end
+
+		def to_s
+			Util.sexpr "set", @var, @value
 		end
 	end
 end
