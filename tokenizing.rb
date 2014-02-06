@@ -1,11 +1,11 @@
 module Tokenizing
-	SPECIAL_SYMBOLS		= /^(\(|\)|\[|\]|=|\{|\}|,)/
-	OPERATORS		= /^(\+|-|\*|\/)/
-	WHITESPACE		= /^(( |\t)+)/
-	IDENTIFIER		= /^([a-zA-Z_][a-zA-Z_0-9]*)/
-	TERMINATOR		= /^(\n|\r\n|\n\r)/
-	NUMBER			= /^([0-9]+(\.[0-9]+)?)/
-	STRING			= /^(".*?")/
+	SPECIAL_SYMBOLS		= /\A(\(|\)|\[|\]|=|\{|\}|,)/
+	OPERATORS		= /\A(\+|-|\*|\/)/
+	WHITESPACE		= /\A(( |\t)+)/
+	IDENTIFIER		= /\A([a-zA-Z_][a-zA-Z_0-9]*)/
+	TERMINATOR		= /\A(\n|\r\n|\n\r)/
+	NUMBER			= /\A([0-9]+(\.[0-9]+)?)/
+	STRING			= /\A(".*?")/
 
 	class Token
 		attr_reader :type, :text
@@ -31,6 +31,7 @@ module Tokenizing
 			case text
 			when WHITESPACE
 				# Do nothing
+				"do nothing"
 			when SPECIAL_SYMBOLS
 				symbol = $1
 				token = Token.new symbol, nil

@@ -50,7 +50,7 @@ module Statements
 		end
 
 		def to_s
-			Util.sexpr "do-block", *@statements
+			Util.nsexpr "do-block", *@statements
 		end
 	end
 
