@@ -128,7 +128,9 @@ module Parsing
 		end
 
 		def parse_statement
-			parse_expression
+			expression = parse_expression
+			expect :terminator
+			return expression
 		end
 
 		def parse_program
