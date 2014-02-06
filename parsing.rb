@@ -197,10 +197,19 @@ module Parsing
 			return Statements::ProcDefinition.new name, params, body
 		end
 
+		def parse_set
+			expect_text "set"
+			name	= parse_name
+			value	= parse_expression
+			return Statements::SetVar.new name, value
+		end
+
 		def parse_statement
 			case next_token.text
 			when "proc"
 				parse_proc_definition
+			when "set"
+				parse_set
 			else
 				expression = parse_expression
 				expect :terminator
