@@ -7,4 +7,4 @@ contents	= File.read ARGV[0]
 tokens		= Tokenizing.tokenize contents
 parse_result	= Parsing.parse tokens
 puts parse_result.to_s
-#Evaling.run parse_result
+Evaling.run parse_result

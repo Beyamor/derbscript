@@ -127,20 +127,11 @@ module Parsing
 			return left
 		end
 
-		def parse_statement
-			expression = parse_expression
-			expect :terminator
-			return expression
-		end
-
-		def parse_program
+		def parse_block_body
 			statements = []
 			while true
-				while next_token.type == :terminator
-					@tokens.shift
-				end
-
-				if @tokens.empty? or next_token.type == :end
+				devour_terminators
+				if @tokens.empty? or next_token.type == :end or next_token.type == "}"
 					break
 				end
 
@@ -148,6 +139,68 @@ module Parsing
 				statements << statement
 			end
 			return Statements::Block.new statements
+		end
+
+		def parse_block
+			devour_terminators
+			expect "{"
+			body = parse_block_body
+			devour_terminators
+			expect "}"
+			return body
+		end
+
+		def parse_name
+			token = @tokens.shift
+			throw "#{token} isnt name" unless token.type == :name
+			return token.text
+		end
+
+		def devour_terminators
+			while next_token.type == :terminator
+				@tokens.shift
+			end
+		end
+
+		def parse_proc_definition_params
+			params = []
+			expect "("
+			devour_terminators
+			until next_token.type == ")"
+				param = parse_name
+				params << param
+				if next_token.type != ")"
+					expect ","
+				end
+				devour_terminators
+			end
+			devour_terminators
+			expect ")"
+			return params
+		end
+
+		def parse_proc_definition
+			expect_text "proc"
+			devour_terminators
+			name	= parse_name
+			params	= parse_proc_definition_params
+			body	= parse_block
+			return Statements::ProcDefinition.new name, params, body
+		end
+
+		def parse_statement
+			case next_token.text
+			when "proc"
+				parse_proc_definition
+			else
+				expression = parse_expression
+				expect :terminator
+				return expression
+			end
+		end
+
+		def parse_program
+			parse_block_body
 		end
 
 		def parse(tokens)
@@ -159,6 +212,11 @@ module Parsing
 			token = @tokens.shift
 			throw "Expected #{token_type} but got #{token.type}" unless token.type == token_type
 		end	
+
+		def expect_text(text)
+			token = @tokens.shift
+			throw "Expected #{text} but got #{token.text}" unless token.text == text
+		end
 	end
 
 	PARSER = Parser.new

@@ -14,6 +14,10 @@ module Statements
 		def eval(scope)
 			scope[@name] = Primitives::Proc.new @parameter_names, @body, scope
 		end
+
+		def to_s
+			Util.sexpr "def-proc", @name, @parameter_names, *@body
+		end
 	end
 
 	class ScopeDefinition
@@ -50,7 +54,7 @@ module Statements
 		end
 
 		def to_s
-			Util.nsexpr "do-block", *@statements
+			Util.nsexpr "block", *@statements
 		end
 	end
 
