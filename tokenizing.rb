@@ -1,4 +1,5 @@
 module Tokenizing
+	COMMENT			= /\A(@.*?$)/
 	SPECIAL_SYMBOLS		= /\A(\(|\)|\[|\]|=|\{|\}|,)/
 	OPERATORS		= /\A(\+|-|\*|\/)/
 	WHITESPACE		= /\A(( |\t)+)/
@@ -29,9 +30,10 @@ module Tokenizing
 
 		until text.empty?
 			case text
+			when COMMENT
+				# Do nothing
 			when WHITESPACE
 				# Do nothing
-				"do nothing"
 			when SPECIAL_SYMBOLS
 				symbol = $1
 				token = Token.new symbol, nil
@@ -56,7 +58,6 @@ module Tokenizing
 				contents = string[1...-1]
 				token = Token.new :string, contents
 				tokens << token
-
 			else
 				throw "Couldn't tokenize #{text}"
 			end
