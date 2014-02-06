@@ -11,6 +11,8 @@ module Tokenizing
 	WHITESPACE		= /^(( |\t)+)/
 	IDENTIFIER		= /^([a-zA-Z_][a-zA-Z_0-9]*)/
 	TERMINATOR		= /^(\n|\r\n|\n\r)/
+	NUMBER			= /^([0-9]+(\.[0-9]+)?)/
+	STRING			= /^(".*?")/
 
 	class Token
 		attr_reader :type, :text
@@ -51,6 +53,18 @@ module Tokenizing
 				text.remove_prefix! $1
 				token = Token.new :terminator, nil
 				tokens << token
+			when NUMBER
+				number = $1
+				text.remove_prefix! number
+				token = Token.new :number, number
+				tokens << token
+			when STRING
+				string = $1
+				contents = string[1...-1]
+				text.remove_prefix! contents
+				token = Token.new :string, contents
+				tokens << token
+
 			else
 				throw "Couldn't tokenize #{text}"
 			end

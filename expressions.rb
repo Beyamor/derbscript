@@ -2,6 +2,22 @@ require_relative "evaling"
 require_relative "util"
 
 module Expressions
+	class Literal
+		attr_reader :value
+
+		def initialize(value)
+			@value = value
+		end
+
+		def eval(scope)
+			@value
+		end
+
+		def to_s
+			"#{@value.class.to_s}:#{@value}"
+		end
+	end
+
 	class Identifier
 		attr_reader :name
 

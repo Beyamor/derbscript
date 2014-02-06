@@ -11,6 +11,18 @@ module Parsing
 		"CALL"		=> 10
 	}
 
+	class NumberParslet
+		def parse(parser, token)
+			Expressions::Literal.new token.text.to_f
+		end
+	end
+
+	class StringParslet
+		def parse(parser, token)
+			Expressions::Literal.new token.text
+		end
+	end
+
 	class NameParslet
 		def parse(parser, token)
 			Expressions::Identifier.new token.text
@@ -128,6 +140,8 @@ module Parsing
 
 	PARSER = Parser.new
 	PARSER.register_prefix :name, NameParslet.new
+	PARSER.register_prefix :string, StringParslet.new
+	PARSER.register_prefix :number, NumberParslet.new
 	PARSER.register_prefix "(", ParensParslet.new
 	PARSER.prefixes "+", "-"
 	["+", "-", "*", "\\"].each do |operator|

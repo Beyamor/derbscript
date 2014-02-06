@@ -27,20 +27,4 @@ module Primitives
 			Evaling.eval @body, @scope
 		end
 	end
-
-	class Literal
-		attr_reader :value
-
-		def initialize(value)
-			@value = value
-		end
-
-		def eval(scope)
-			@value
-		end
-
-		def to_s
-			"#{@value.class.to_s}:#{@value}"
-		end
-	end
 end
