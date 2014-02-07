@@ -155,10 +155,8 @@ module Parsing
 		end
 
 		def parse_block
-			devour_terminators
 			expect "{"
 			body = parse_block_body
-			devour_terminators
 			expect "}"
 			return body
 		end
@@ -196,7 +194,6 @@ module Parsing
 				end
 				devour_terminators
 			end
-			devour_terminators
 			expect ")"
 			return params
 		end
@@ -219,26 +216,20 @@ module Parsing
 
 		def parse_if
 			expect_text "if"
-			devour_terminators
 			expect "("
 			condition = parse_expression
 			expect ")"
-			devour_terminators
 			if_true = parse_block_or_statement
-			devour_terminators
 			expect_text "else" # TODO optation else
-			devour_terminators
 			if_false = parse_block_or_statement
 			return Statements::If.new condition, if_true, if_false
 		end
 
 		def parse_while
 			expect_text "while"
-			devour_terminators
 			expect "("
 			condition = parse_expression
 			expect ")"
-			devour_terminators
 			body = parse_block_or_statement
 			return Statements::While.new condition, body
 		end
@@ -278,6 +269,7 @@ module Parsing
 		end
 
 		def expect(token_type)
+			devour_terminators unless token_type == :terminator
 			token = @tokens.shift
 			throw "Expected #{token_type} but got #{token.type}" unless token.type == token_type
 		end	
