@@ -2,20 +2,6 @@ require_relative "statements"
 require_relative "expressions"
 
 module Parsing
-	PRECEDENCES = {
-		">"		=> 2,
-		">="		=> 2,
-		"<"		=> 2,
-		"<="		=> 2,
-		"+"		=> 3,
-		"-"		=> 3,
-		"*"		=> 4,
-		"\\"		=> 4,
-		"PREFIX"	=> 7,
-		"CALL"		=> 10,
-		"ASSIGNMENT"	=> 1
-	}
-
 	class NumberParslet
 		def parse(parser, token)
 			Expressions::Literal.new token.text.to_f
@@ -42,19 +28,15 @@ module Parsing
 		end
 	end
 
-	class PrefixOperatorParslet
-		def parse(parser, token)
-			operand = parser.parse_expression PRECEDENCES["PREFIX"]
-			throw "Whoa, haven't implemented prefix operators yet"
+	module Infix
+		attr_reader :precedence
+		def initialize(precedence)
+			@precedence = precedence
 		end
 	end
 
 	class BinaryOperatorParselet
-		attr_reader :precedence
-
-		def initialize(precedence)
-			@precedence = precedence
-		end
+		include Infix
 
 		def parse(parser, left, token)
 			right = parser.parse_expression @precedence
@@ -63,9 +45,7 @@ module Parsing
 	end
 
 	class CallParselet
-		def precedence
-			PRECEDENCES["CALL"]
-		end
+		include Infix
 
 		def parse(parser, name, token)
 			arguments = []
@@ -82,9 +62,7 @@ module Parsing
 	end
 
 	class AssignmentParselet
-		def precedence
-			PRECEDENCES["ASSIGNMENT"]
-		end
+		include Infix
 
 		def parse(parser, var, token)
 			value = parser.parse_expression
@@ -93,25 +71,8 @@ module Parsing
 	end
 
 	class Parser		
-		def initialize
-			@prefix_parselets	= {}
-			@infix_parselets	= {}
-		end
-
-		def register_prefix(token_type, prefix_parselet)
-			@prefix_parselets[token_type] = prefix_parselet
-		end
-
-		def register_infix(token_type, infix_parselet)
-			@infix_parselets[token_type] = infix_parselet
-		end
-
-		def prefix(token_type)
-			register_prefix token_type, PrefixOperatorParslet.new
-		end
-
-		def prefixes(*token_types)
-			token_types.each {|token_type| prefix token_type}
+		def initialize(grammar)
+			@grammar = grammar
 		end
 
 		def next_token
@@ -119,7 +80,7 @@ module Parsing
 		end
 
 		def next_precedence
-			parselet = @infix_parselets[next_token.type]
+			parselet = @grammar.infix next_token.type
 
 			if parselet
 				parselet.precedence
@@ -130,13 +91,13 @@ module Parsing
 
 		def parse_precedence_expression(min_precedence=0)
 			token	= @tokens.shift
-			prefix	= @prefix_parselets[token.type]
+			prefix	= @grammar.prefix token.type
 			throw "Could not parse #{token.type}:#{token.text}" unless prefix
 
 			left = prefix.parse self, token
 			while min_precedence < next_precedence
 				token	= @tokens.shift
-				infix	= @infix_parselets[token.type]
+				infix	= @grammar.infix token.type
 				left	= infix.parse self, left, token
 			end
 
@@ -325,21 +286,5 @@ module Parsing
 			token = @tokens.shift
 			throw "Expected #{text} but got #{token.text}" unless token.text == text
 		end
-	end
-
-	PARSER = Parser.new
-	PARSER.register_prefix :name, NameParslet.new
-	PARSER.register_prefix :string, StringParslet.new
-	PARSER.register_prefix :number, NumberParslet.new
-	PARSER.register_prefix "(", ParensParslet.new
-	PARSER.prefixes "+", "-"
-	["+", "-", "*", "\\", ">", "<", ">=", "<="].each do |operator|
-		PARSER.register_infix operator, BinaryOperatorParselet.new(PRECEDENCES[operator])
-	end
-	PARSER.register_infix "(", CallParselet.new
-	PARSER.register_infix "=", AssignmentParselet.new
-
-	def Parsing.parse(tokens)
-		PARSER.parse tokens
 	end
 end
