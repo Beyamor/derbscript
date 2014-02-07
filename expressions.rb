@@ -69,19 +69,6 @@ module Expressions
 		end
 	end
 
-	OPERATORS = {
-		"=="	=> lambda {|x, y| x == y},
-		"!="	=> lambda {|x, y| x != y},
-		">"	=> lambda {|x, y| x > y},
-		">="	=> lambda {|x, y| x >= y},
-		"<"	=> lambda {|x, y| x < y},
-		"<="	=> lambda {|x, y| x <= y},
-		"+"	=> lambda {|x, y| x + y},
-		"-"	=> lambda {|x, y| x - y},
-		"*"	=> lambda {|x, y| x * y},
-		"\\"	=> lambda {|x, y| x / y}
-	}
-
 	class OperatorCall
 		def initialize(operator, lhs, rhs)
 			@operator	= operator
@@ -90,10 +77,9 @@ module Expressions
 		end
 
 		def eval(scope)
-			lhs	= Evaling.eval @lhs, scope
-			rhs	= Evaling.eval @rhs, scope
-
-			OPERATORS[@operator].call lhs, rhs
+			lhs = Evaling.eval @lhs, scope
+			rhs = Evaling.eval @rhs, scope
+			@operator.to_sym.to_proc.call lhs, rhs
 		end
 
 		def to_s
