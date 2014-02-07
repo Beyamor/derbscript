@@ -5,6 +5,7 @@ module Grammar
 		def initialize
 			@infix_parselets	= {}
 			@prefix_parselets	= {}
+			@statement_transforms	= {}
 		end
 
 		def prefix(token_type)
@@ -33,6 +34,27 @@ module Grammar
 
 		def binary_operators(operators)
 			operators.each {|type, precedence| register_infix type, Parsing::BinaryOperatorParselet.new(precedence)}
+		end
+
+		def register_statement(prefix, transform)
+			@statement_transforms[prefix] = transform
+		end
+
+		def has_statement?(prefix)
+			statement prefix
+		end
+
+		def statement(prefix)
+			@statement_transforms[prefix]
+		end
+
+		def statements(statements)
+			statements.each do |prefix, transform|
+				register_statement(prefix, lambda do |parser|
+					parser.expect_text prefix
+					return transform.call parser
+				end)
+			end
 		end
 
 		def self.describe(description)

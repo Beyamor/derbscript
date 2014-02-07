@@ -180,7 +180,7 @@ module Parsing
 			return type
 		end
 
-		def parse_proc_definition_params
+		def parse_params_definition
 			params = []
 			expect "("
 			devour_terminators
@@ -198,52 +198,9 @@ module Parsing
 			return params
 		end
 
-		def parse_proc_definition
-			expect_text "proc"
-			devour_terminators
-			name	= parse_name
-			params	= parse_proc_definition_params
-			body	= parse_block
-			return Statements::ProcDefinition.new name, params, body
-		end
-
-		def parse_set
-			expect_text "set"
-			name	= parse_name
-			value	= parse_expression
-			return Statements::SetVar.new name, value
-		end
-
-		def parse_if
-			expect_text "if"
-			expect "("
-			condition = parse_expression
-			expect ")"
-			if_true = parse_block_or_statement
-			expect_text "else" # TODO optation else
-			if_false = parse_block_or_statement
-			return Statements::If.new condition, if_true, if_false
-		end
-
-		def parse_while
-			expect_text "while"
-			expect "("
-			condition = parse_expression
-			expect ")"
-			body = parse_block_or_statement
-			return Statements::While.new condition, body
-		end
-
 		def parse_statement
-			case next_token.text
-			when "proc"
-				parse_proc_definition
-			when "set"
-				parse_set
-			when "if"
-				parse_if
-			when "while"
-				parse_while
+			if @grammar.has_statement? next_token.text
+				@grammar.statement(next_token.text).call self
 			else
 				expression = parse_expression
 				expect :terminator
