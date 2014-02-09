@@ -33,5 +33,9 @@ module Util
 		def empty?
 			@children.empty?
 		end
+
+		def empty!
+			@children = []
+		end
 	end
 end

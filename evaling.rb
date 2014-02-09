@@ -33,6 +33,9 @@ module Evaling
 					thing = stack.pop
 				end
 				loops.pop
+			when Statements::Return
+				# implicitly return result, the last evaluated expression
+				stack.empty!
 			else
 				result = thing.eval scope
 			end

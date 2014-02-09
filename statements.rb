@@ -22,6 +22,23 @@ module Statements
 		end
 	end
 
+	class FuncDefinition
+		def initialize(name, parameter_names, body)
+			@name			= name
+			@parameter_names	= parameter_names
+			@body			= body
+		end
+
+		def eval(scope)
+			scope[@name] = Primitives::Func.new @parameter_names, @body, scope
+		end
+
+		def to_s
+			Util.sexpr "def-func", @name, @parameter_names, *@body
+		end
+
+	end
+
 	class ScopeDefinition
 		def initialize(name, body)
 			@name	= name
@@ -90,6 +107,12 @@ module Statements
 	class Break
 		def to_s
 			Util.sexpr "break"
+		end
+	end
+
+	class Return
+		def to_s
+			Util.sexpr "return"
 		end
 	end
 end

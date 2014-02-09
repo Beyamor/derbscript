@@ -73,6 +73,14 @@ module DS
 				return Statements::ProcDefinition.new name, params, body
 			end,
 
+			"func" => lambda do |parser|
+				name	= parser.parse_name
+				params	= parser.parse_params_definition
+				# TODO parse the return part of the signature 
+				body	= parser.parse_block
+				return Statements::FuncDefinition.new name, params, body
+			end,
+
 			"scope" => lambda do |parser|
 				name	= parser.parse_name
 				body	= parser.parse_block
@@ -81,6 +89,15 @@ module DS
 
 			"break" => lambda do |parser|
 				return Statements::Break.new
+			end,
+
+			"return" => lambda do |parser|
+				block = [Statements::Return.new]
+				if parser.next_token.type != :terminator
+					expression = parser.parse_expression
+					block.unshift expression
+				end
+				return Statements::Block.new block
 			end
 		}
 	})
