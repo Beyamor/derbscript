@@ -12,17 +12,31 @@ module Primitives
 		end
 	end
 
+	class ParamDefinition
+		attr_accessor :name, :type
+
+		def initialize(name, type)
+			@name	= name
+			@type	= type
+		end
+
+		def to_s
+			"#{@name}:#{@type}"
+		end
+	end
+
 	class Func
-		def initialize(param_names, body, parent_scope)
+		def initialize(param_defs, body, parent_scope)
 			@parent_scope	= parent_scope
-			@param_names	= param_names
+			@param_defs	= param_defs
 			@body		= body
 		end
 
 		def call(params)
 			scope = Environment::Scope.new @parent_scope
-			@param_names.zip(params).each do |name, param|
-				scope[name] = param
+			@param_defs.zip(params).each do |param_def, param|
+				scope.declare_var param_def.name, param_def.type
+				scope[param_def.name].value = param
 			end
 
 			Evaling.eval @body, scope
@@ -30,16 +44,17 @@ module Primitives
 	end
 
 	class Proc
-		def initialize(param_names, body, parent_scope)
+		def initialize(param_defs, body, parent_scope)
 			@parent_scope	= parent_scope
-			@param_names	= param_names
+			@param_defs	= param_defs
 			@body		= body
 		end
 
 		def call(params)
 			scope = Environment::Scope.new @parent_scope
-			@param_names.zip(params).each do |name, param|
-				scope[name] = param
+			@param_defs.zip(params).each do |param_def, param|
+				scope.declare_var param_def.name, param_def.type
+				scope[name].value = param
 			end
 
 			Evaling.eval @body, scope

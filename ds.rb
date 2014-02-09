@@ -16,7 +16,7 @@ module DS
 			:string	=> Parsing::StringParslet.new,
 			:number	=> Parsing::NumberParslet.new,
 			"("	=> Parsing::ParensParslet.new,
-			:name	=> Parsing::NameParslet.new
+			:name	=> Parsing::ResolveVarParslet.new
 		},
 
 		:binary_operators => {
@@ -33,7 +33,7 @@ module DS
 
 		:infixes => {
 			"("	=> Parsing::CallParselet.new(PRECEDENCES[:call]),
-			"="	=> Parsing::AssignmentParselet.new(PRECEDENCES[:assignment])
+			"="	=> Parsing::NumericAssignmentParselet.new(PRECEDENCES[:assignment])
 		},
 
 		:statements => {
@@ -104,6 +104,10 @@ module DS
 	})
 
 	@@parser = Parsing::Parser.new @@grammar
+	@@parser.type_map = {
+		"String"	=> String,
+		"Number"	=> Float
+	}
 
 	def DS.parse(tokens)
 		@@parser.parse tokens

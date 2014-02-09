@@ -1,5 +1,7 @@
 require_relative "statements"
 require_relative "expressions"
+require_relative "primitives"
+require_relative "environment"
 
 module Parsing
 	class NumberParslet
@@ -14,9 +16,9 @@ module Parsing
 		end
 	end
 
-	class NameParslet
+	class ResolveVarParslet
 		def parse(parser, token)
-			Expressions::Identifier.new token.text
+			Expressions::ResolveVar.new Environment::Identifier.new token.text
 		end
 	end
 
@@ -61,16 +63,18 @@ module Parsing
 		end
 	end
 
-	class AssignmentParselet
+	class NumericAssignmentParselet
 		include Infix
 
 		def parse(parser, var, token)
 			value = parser.parse_expression
-			return Expressions::Assignment.new var, value
+			return Expressions::NumericAssignment.new var, value
 		end
 	end
 
 	class Parser		
+		attr_accessor :type_map
+
 		def initialize(grammar)
 			@grammar = grammar
 		end
@@ -164,7 +168,17 @@ module Parsing
 		def parse_name
 			token = @tokens.shift
 			throw "#{token} isnt name" unless token.type == :name
-			return Expressions::Identifier.new token.text
+			return Environment::Identifier.new token.text
+		end
+
+		def parse_unqualified_name
+			name = parse_name
+			throw "Unexpected qualified name #{name}" if name.is_qualified?
+			return name
+		end
+
+		def parse_var
+			return Expressions::ResolveVar.new parse_name
 		end
 
 		def devour_terminators
@@ -174,9 +188,9 @@ module Parsing
 		end
 
 		def parse_type
-			token	= @tokens.shift
-			type	= token.text
-			throw "Unknown type #{type}" unless ["Number", "String"].member? type
+			token = @tokens.shift
+			throw "Unknown type #{token}" unless @type_map.member? token.text
+			type = @type_map[token.text]
 			return type
 		end
 
@@ -185,9 +199,9 @@ module Parsing
 			expect "("
 			devour_terminators
 			until next_token.type == ")"
-				# TODO actually use types
-				parse_type
-				param = parse_name
+				type	= parse_type
+				name	= parse_name
+				param	= Primitives::ParamDefinition.new name, type
 				params << param
 				if next_token.type != ")"
 					expect ","

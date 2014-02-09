@@ -50,6 +50,10 @@ module Statements
 			Evaling.eval @body, scope
 			parent_scope[@name] = scope
 		end
+
+		def to_s
+			Util.sexpr "def-scope", @name, @body
+		end
 	end
 
 	class SetVar
