@@ -27,7 +27,8 @@ module DS
 			">"	=> PRECEDENCES[:compare],
 			">="	=> PRECEDENCES[:compare],
 			"<"	=> PRECEDENCES[:compare],
-			"<="	=> PRECEDENCES[:compare]
+			"<="	=> PRECEDENCES[:compare],
+			"=="	=> PRECEDENCES[:compare]
 		},
 
 		:infixes => {
@@ -74,6 +75,10 @@ module DS
 				name	= parser.parse_name
 				body	= parser.parse_block
 				return Statements::ScopeDefinition.new name, body
+			end,
+
+			"break" => lambda do |parser|
+				return Statements::Break.new
 			end
 		}
 	})

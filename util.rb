@@ -48,4 +48,26 @@ module Util
 			@is_leaf = true
 		end
 	end
+
+	class Stack
+		def initialize(*children)
+			@children = children
+		end
+
+		def push(child)
+			@children.push child
+		end
+
+		def pop
+			@children.pop
+		end
+
+		def peek
+			@children[@children.length-1]
+		end
+
+		def empty?
+			@children.empty?
+		end
+	end
 end

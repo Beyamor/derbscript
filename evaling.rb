@@ -1,9 +1,12 @@
 require_relative "environment"
 require_relative "statements"
+require_relative "util"
 
 module Evaling
 	def Evaling.eval(thing, scope)
-		stack = [thing]
+		stack	= Util::Stack.new thing
+		loops	= Util::Stack.new
+
 		until stack.empty?
 			thing = stack.pop
 			case thing
@@ -12,9 +15,17 @@ module Evaling
 					stack.push child
 				end
 			when Statements::While
+				if loops.peek != thing
+					loops.push thing
+				end
+
 				if Evaling.eval thing.condition, scope
+					loops.push thing if loops.peek != thing 
 					stack.push thing
 					stack.push thing.body
+				else
+					throw "Whoa, mismatched loop stack" unless loops.peek == thing
+					loops.pop
 				end
 			when Statements::If
 				if Evaling.eval thing.condition, scope
@@ -22,6 +33,12 @@ module Evaling
 				else
 					stack.push thing.if_false
 				end
+			when Statements::Break
+				throw "No loop to break out of" if loops.empty?
+				until thing == loops.peek
+					thing = stack.pop
+				end
+				loops.pop
 			else
 				result = thing.eval scope
 			end

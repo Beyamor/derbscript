@@ -109,4 +109,10 @@ module Statements
 			Util.sexpr "while", @condition, @body
 		end
 	end
+
+	class Break < Util::LanguageNode
+		def to_s
+			Util.sexpr "break"
+		end
+	end
 end

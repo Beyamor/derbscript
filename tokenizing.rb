@@ -34,13 +34,13 @@ module Tokenizing
 				# Do nothing
 			when WHITESPACE
 				# Do nothing
-			when SPECIAL_SYMBOLS
-				symbol = $1
-				token = Token.new symbol, nil
-				tokens << token
 			when OPERATORS
 				operator = $1
 				token = Token.new operator, nil
+				tokens << token
+			when SPECIAL_SYMBOLS
+				symbol = $1
+				token = Token.new symbol, nil
 				tokens << token
 			when IDENTIFIER
 				name = $1
