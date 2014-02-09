@@ -164,7 +164,7 @@ module Parsing
 		def parse_name
 			token = @tokens.shift
 			throw "#{token} isnt name" unless token.type == :name
-			return token.text
+			return Expressions::Identifier.new token.text
 		end
 
 		def devour_terminators

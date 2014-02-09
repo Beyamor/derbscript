@@ -1,11 +1,19 @@
 require_relative "environment"
+require_relative "statements"
 
 module Evaling
 	def Evaling.eval(thing, scope)
-		if thing.respond_to? :eval
-			thing.eval scope
-		else
-			thing
+		stack = [thing]
+		until stack.empty?
+			thing = stack.pop
+			puts "\n"
+			puts thing
+			case thing
+			when Statements::Block
+				thing.children.reverse.each {|child| stack.push child}
+			else
+				thing.eval scope
+			end
 		end
 	end
 

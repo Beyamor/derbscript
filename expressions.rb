@@ -2,11 +2,12 @@ require_relative "evaling"
 require_relative "util"
 
 module Expressions
-	class Literal
+	class Literal < Util::LanguageLeafNode
 		attr_reader :value
 
 		def initialize(value)
 			@value = value
+			super()
 		end
 
 		def eval(scope)
@@ -18,11 +19,12 @@ module Expressions
 		end
 	end
 
-	class Identifier
+	class Identifier < Util::LanguageLeafNode
 		attr_reader :name
 
 		def initialize(name)
 			*@scopes, @name = name.split ":"
+			super()
 		end
 
 		def eval(scope)
@@ -39,10 +41,11 @@ module Expressions
 		end
 	end
 
-	class Call
+	class Call < Util::LanguageNode
 		def initialize(name, params)
 			@name	= name
 			@params	= params
+			super @name, *@params
 		end
 
 		def eval(scope)
@@ -51,13 +54,14 @@ module Expressions
 		end
 
 		def to_s
-			Util.sexpr @name, *@params
+			Util.sexpr "call", @name, *@params
 		end
 	end
 
-	class StringExpression
+	class StringExpression < Util::LanguageLeafNode
 		def initialize(expressions)
 			@expressions = expressions
+			super()
 		end
 
 		def eval(scope)
@@ -69,11 +73,12 @@ module Expressions
 		end
 	end
 
-	class OperatorCall
+	class OperatorCall < Util::LanguageLeafNode
 		def initialize(operator, lhs, rhs)
 			@operator	= operator
 			@lhs		= lhs
 			@rhs		= rhs
+			super()
 		end
 
 		def eval(scope)
@@ -87,10 +92,11 @@ module Expressions
 		end
 	end
 
-	class Assignment
+	class Assignment < Util::LanguageLeafNode
 		def initialize(var, value)
 			@var	= var
 			@value	= value
+			super()
 		end
 
 		def eval(scope)

@@ -4,11 +4,14 @@ require_relative "environment"
 require_relative "util"
 
 module Statements
-	class ProcDefinition
+	attr_reader :name, :parameter_names, :body
+
+	class ProcDefinition < Util::LanguageNode
 		def initialize(name, parameter_names, body)
 			@name			= name
 			@parameter_names	= parameter_names
 			@body			= body
+			super()
 		end
 
 		def eval(scope)
@@ -20,10 +23,11 @@ module Statements
 		end
 	end
 
-	class ScopeDefinition
+	class ScopeDefinition < Util::LanguageNode
 		def initialize(name, body)
 			@name	= name
 			@body	= body
+			super @body
 		end
 
 		def eval(parent_scope)
@@ -33,10 +37,11 @@ module Statements
 		end
 	end
 
-	class SetVar
+	class SetVar < Util::LanguageNode
 		def initialize(name, value)
 			@name	= name
 			@value	= value
+			super @value
 		end
 
 		def eval(scope)
@@ -48,9 +53,10 @@ module Statements
 		end
 	end
 
-	class Block
+	class Block < Util::LanguageNode
 		def initialize(statements)
 			@statements = statements
+			super *@statements
 		end
 
 		def eval(scope)
@@ -62,11 +68,12 @@ module Statements
 		end
 	end
 
-	class If
+	class If < Util::LanguageNode
 		def initialize(condition, if_true, if_false)
 			@condition	= condition
 			@if_true	= if_true
 			@if_false	= if_false
+			super @condition, @if_true, @if_false
 		end
 
 		def eval(scope)
@@ -78,10 +85,11 @@ module Statements
 		end
 	end
 
-	class While
+	class While < Util::LanguageNode
 		def initialize(condition, body)
 			@condition	= condition
 			@body		= body
+			super @condition, @body
 		end
 
 		def eval(scope)
