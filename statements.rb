@@ -69,6 +69,7 @@ module Statements
 	end
 
 	class If < Util::LanguageNode
+		attr_accessor :condition, :if_true, :if_false
 		def initialize(condition, if_true, if_false)
 			@condition	= condition
 			@if_true	= if_true
@@ -83,9 +84,15 @@ module Statements
 				Evaling.eval @if_false, scope
 			end
 		end
+
+		def to_s
+			Util.sexpr "if", @condition, @if_true, @if_false
+		end
 	end
 
 	class While < Util::LanguageNode
+		attr_accessor :condition, :body
+
 		def initialize(condition, body)
 			@condition	= condition
 			@body		= body

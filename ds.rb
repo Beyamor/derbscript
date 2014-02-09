@@ -40,8 +40,11 @@ module DS
 				parser.expect "("
 				condition = parser.parse_expression
 				parser.expect ")"
+				parser.devour_terminators
 				if_true = parser.parse_block_or_statement
-				parser.expect "else"
+				parser.devour_terminators
+				parser.expect_text "else"
+				parser.devour_terminators
 				if_false = parser.parse_block_or_statement
 				return Statements::If.new condition, if_true, if_false
 			end,

@@ -15,7 +15,11 @@ module Expressions
 		end
 
 		def to_s
-			"#{@value.class.to_s}:#{@value}"
+			if String === @value
+				"#{@value.class.to_s}:\"#{@value}\""
+			else
+				"#{@value.class.to_s}:#{@value}"
+			end
 		end
 	end
 

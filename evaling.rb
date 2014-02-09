@@ -11,6 +11,17 @@ module Evaling
 				thing.children.reverse.each do |child|
 					stack.push child
 				end
+			when Statements::While
+				if Evaling.eval thing.condition, scope
+					stack.push thing
+					stack.push thing.body
+				end
+			when Statements::If
+				if Evaling.eval thing.condition, scope
+					stack.push thing.if_true
+				else
+					stack.push thing.if_false
+				end
 			else
 				result = thing.eval scope
 			end
