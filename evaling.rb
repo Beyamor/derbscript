@@ -14,19 +14,13 @@ module Evaling
 				thing.children.reverse.each do |child|
 					stack.push child
 				end
-			when Statements::While
+			when Statements::Loop
 				if loops.peek != thing
 					loops.push thing
 				end
 
-				if Evaling.eval thing.condition, scope
-					loops.push thing if loops.peek != thing 
-					stack.push thing
-					stack.push thing.body
-				else
-					throw "Whoa, mismatched loop stack" unless loops.peek == thing
-					loops.pop
-				end
+				stack.push thing
+				stack.push thing.body
 			when Statements::If
 				if Evaling.eval thing.condition, scope
 					stack.push thing.if_true

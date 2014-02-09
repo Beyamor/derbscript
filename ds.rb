@@ -61,7 +61,9 @@ module DS
 				condition = parser.parse_expression
 				parser.expect ")"
 				body = parser.parse_block_or_statement
-				return Statements::While.new condition, body
+				loop_body = Statements::If.new condition, body, Statements::Break.new
+
+				return Statements::Loop.new loop_body
 			end,
 
 			"proc"	=> lambda do |parser|
