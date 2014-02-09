@@ -6,15 +6,16 @@ module Evaling
 		stack = [thing]
 		until stack.empty?
 			thing = stack.pop
-			puts "\n"
-			puts thing
 			case thing
 			when Statements::Block
-				thing.children.reverse.each {|child| stack.push child}
+				thing.children.reverse.each do |child|
+					stack.push child
+				end
 			else
-				thing.eval scope
+				result = thing.eval scope
 			end
 		end
+		return result
 	end
 
 	def Evaling.run(parse_tree)
