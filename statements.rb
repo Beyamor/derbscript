@@ -77,14 +77,6 @@ module Statements
 			super @condition, @if_true, @if_false
 		end
 
-		def eval(scope)
-			if Evaling.eval(@condition, scope)
-				Evaling.eval @if_true, scope
-			elsif @if_false
-				Evaling.eval @if_false, scope
-			end
-		end
-
 		def to_s
 			Util.sexpr "if", @condition, @if_true, @if_false
 		end
