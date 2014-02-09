@@ -92,12 +92,12 @@ module DS
 			end,
 
 			"return" => lambda do |parser|
-				block = [Statements::Return.new]
 				if parser.next_token.type != :terminator
 					expression = parser.parse_expression
-					block.unshift expression
+					return Statements::Return.new expression
+				else
+					return Statements::Return.new
 				end
-				return Statements::Block.new block
 			end
 		}
 	})

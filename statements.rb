@@ -111,8 +111,18 @@ module Statements
 	end
 
 	class Return
+		attr_accessor :expression
+
+		def initialize(expression=nil)
+			@expression = expression
+		end
+
 		def to_s
-			Util.sexpr "return"
+			if @expression
+				Util.sexpr "return", @expression
+			else
+				Util.sexpr "return"
+			end
 		end
 	end
 end

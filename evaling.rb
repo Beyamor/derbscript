@@ -34,8 +34,11 @@ module Evaling
 				end
 				loops.pop
 			when Statements::Return
-				# implicitly return result, the last evaluated expression
-				stack.empty!
+				if thing.expression
+					return Evaling.eval thing.expression, scope
+				else
+					return nil
+				end
 			else
 				result = thing.eval scope
 			end
