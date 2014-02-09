@@ -68,6 +68,12 @@ module DS
 				params	= parser.parse_params_definition
 				body	= parser.parse_block
 				return Statements::ProcDefinition.new name, params, body
+			end,
+
+			"scope" => lambda do |parser|
+				name	= parser.parse_name
+				body	= parser.parse_block
+				return Statements::ScopeDefinition.new name, body
 			end
 		}
 	})
