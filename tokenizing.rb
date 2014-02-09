@@ -1,7 +1,6 @@
 module Tokenizing
 	COMMENT			= /\A(@.*?$)/
-	SPECIAL_SYMBOLS		= /\A(\(|\)|\[|\]|=|\{|\}|,)/
-	OPERATORS		= /\A(\+|-|\*|\/|>|>=|<|<=|==)/
+	SYMBOLS			= /\A(\(|\)|\[|\]|=|\{|\}|,|->|>|>=|<|<=|\+|-|\*|\\)/
 	WHITESPACE		= /\A(( |\t)+)/
 	IDENTIFIER		= /\A([a-zA-Z_][a-zA-Z_0-9]*(:[a-zA-Z_][a-zA-Z_0-9]*)*)/
 	TERMINATOR		= /\A(\n|\r\n|\n\r)/
@@ -11,7 +10,7 @@ module Tokenizing
 	class Token
 		attr_reader :type, :text
 
-		def initialize(type, text)
+		def initialize(type, text=nil)
 			@type	= type
 			@text	= text
 		end
@@ -34,13 +33,8 @@ module Tokenizing
 				# Do nothing
 			when WHITESPACE
 				# Do nothing
-			when OPERATORS
-				operator = $1
-				token = Token.new operator, nil
-				tokens << token
-			when SPECIAL_SYMBOLS
-				symbol = $1
-				token = Token.new symbol, nil
+			when SYMBOLS
+				token = Token.new $1
 				tokens << token
 			when IDENTIFIER
 				name = $1

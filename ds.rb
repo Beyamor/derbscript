@@ -74,10 +74,11 @@ module DS
 			end,
 
 			"func" => lambda do |parser|
-				name	= parser.parse_name
-				params	= parser.parse_params_definition
-				# TODO parse the return part of the signature 
-				body	= parser.parse_block
+				name		= parser.parse_name
+				params		= parser.parse_params_definition
+				parser.expect "->"
+				return_type	= parser.parse_type
+				body		= parser.parse_block
 				return Statements::FuncDefinition.new name, params, body
 			end,
 
