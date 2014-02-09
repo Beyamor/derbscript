@@ -6,12 +6,11 @@ require_relative "util"
 module Statements
 	attr_reader :name, :parameter_names, :body
 
-	class ProcDefinition < Util::LanguageNode
+	class ProcDefinition
 		def initialize(name, parameter_names, body)
 			@name			= name
 			@parameter_names	= parameter_names
 			@body			= body
-			super()
 		end
 
 		def eval(scope)
@@ -23,11 +22,10 @@ module Statements
 		end
 	end
 
-	class ScopeDefinition < Util::LanguageNode
+	class ScopeDefinition
 		def initialize(name, body)
 			@name	= name
 			@body	= body
-			super @body
 		end
 
 		def eval(parent_scope)
@@ -37,11 +35,10 @@ module Statements
 		end
 	end
 
-	class SetVar < Util::LanguageNode
+	class SetVar
 		def initialize(name, value)
 			@name	= name
 			@value	= value
-			super @value
 		end
 
 		def eval(scope)
@@ -53,14 +50,11 @@ module Statements
 		end
 	end
 
-	class Block < Util::LanguageNode
+	class Block
+		attr_accessor :statements
+
 		def initialize(statements)
 			@statements = statements
-			super *@statements
-		end
-
-		def eval(scope)
-			@statements.each {|s| Evaling.eval s, scope}
 		end
 
 		def to_s
@@ -68,13 +62,12 @@ module Statements
 		end
 	end
 
-	class If < Util::LanguageNode
+	class If
 		attr_accessor :condition, :if_true, :if_false
 		def initialize(condition, if_true, if_false=nil)
 			@condition	= condition
 			@if_true	= if_true
 			@if_false	= if_false
-			super @condition, @if_true, @if_false
 		end
 
 		def to_s
@@ -82,7 +75,7 @@ module Statements
 		end
 	end
 
-	class Loop < Util::LanguageNode
+	class Loop
 		attr_accessor :body
 
 		def initialize(body)
@@ -94,7 +87,7 @@ module Statements
 		end
 	end
 
-	class Break < Util::LanguageNode
+	class Break
 		def to_s
 			Util.sexpr "break"
 		end

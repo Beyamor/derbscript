@@ -13,42 +13,6 @@ module Util
 		return s
 	end
 
-	class LanguageNode
-		attr_accessor :parent, :children, :node_index
-
-		def initialize(*children)
-			@children	= children
-			@parent		= nil
-			@children.each_with_index do |node, index|
-				node.parent	= self
-				node.node_index	= index
-			end
-		end
-
-		def has_parent?
-			parent != nil
-		end
-
-		def is_first?
-			@node_index == 0
-		end
-
-		def is_last?
-			@node_index == @parent.children.length - 1
-		end
-
-		def is_leaf?
-			@is_leaf
-		end
-	end
-
-	class LanguageLeafNode < LanguageNode
-		def initialize
-			super
-			@is_leaf = true
-		end
-	end
-
 	class Stack
 		def initialize(*children)
 			@children = children

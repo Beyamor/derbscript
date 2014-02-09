@@ -11,8 +11,8 @@ module Evaling
 			thing = stack.pop
 			case thing
 			when Statements::Block
-				thing.children.reverse.each do |child|
-					stack.push child
+				thing.statements.reverse.each do |statement|
+					stack.push statement
 				end
 			when Statements::Loop
 				if loops.peek != thing
