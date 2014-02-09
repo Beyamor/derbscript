@@ -14,33 +14,35 @@ module Primitives
 
 	class Func
 		def initialize(param_names, body, parent_scope)
+			@parent_scope	= parent_scope
 			@param_names	= param_names
 			@body		= body
-			@scope		= Environment::Scope.new parent_scope
 		end
 
 		def call(params)
+			scope = Environment::Scope.new @parent_scope
 			@param_names.zip(params).each do |name, param|
-				@scope[name] = param
+				scope[name] = param
 			end
 
-			Evaling.eval @body, @scope
+			Evaling.eval @body, scope
 		end
 	end
 
 	class Proc
 		def initialize(param_names, body, parent_scope)
+			@parent_scope	= parent_scope
 			@param_names	= param_names
 			@body		= body
-			@scope		= Environment::Scope.new parent_scope
 		end
 
 		def call(params)
+			scope = Environment::Scope.new @parent_scope
 			@param_names.zip(params).each do |name, param|
-				@scope[name] = param
+				scope[name] = param
 			end
 
-			Evaling.eval @body, @scope
+			Evaling.eval @body, scope
 		end
 	end
 end
