@@ -102,26 +102,6 @@ module Statements
 		end
 	end
 
-	class While < Util::LanguageNode
-		attr_accessor :condition, :body
-
-		def initialize(condition, body)
-			@condition	= condition
-			@body		= body
-			super @condition, @body
-		end
-
-		def eval(scope)
-			while Evaling.eval @condition, scope
-				Evaling.eval @body, scope
-			end
-		end
-
-		def to_s
-			Util.sexpr "while", @condition, @body
-		end
-	end
-
 	class Break < Util::LanguageNode
 		def to_s
 			Util.sexpr "break"
