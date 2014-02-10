@@ -1,10 +1,6 @@
-require_relative "tokenizing"
-require_relative "primitives"
-require_relative "evaling"
 require_relative "ds"
 
 contents	= File.read ARGV[0]
-tokens		= Tokenizing.tokenize contents
-parse_result	= DS.parse tokens
+parse_result	= DS.parse contents
 puts parse_result.to_s
-Evaling.run parse_result
+DS.run parse_result

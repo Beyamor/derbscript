@@ -1,6 +1,8 @@
 require_relative "grammar"
 require_relative "parsing"
 require_relative "statements"
+require_relative "environment"
+require_relative "tokenizing"
 
 module DS
 	PRECEDENCES = {
@@ -109,7 +111,56 @@ module DS
 		"Number"	=> Float
 	}
 
-	def DS.parse(tokens)
+	def DS.core_library
+		open_files = {}
+		return {
+			"printFoo"	=> Primitives::BlockFunction.new {puts "foo"},
+			"println"	=> Primitives::BlockFunction.new {|x| puts x},
+			"open"		=> Primitives::BlockFunction.new {|which| open_files[which] = File.open which, "w"},
+			"write"		=> Primitives::BlockFunction.new {|which, text| open_files[which].write text},
+			"close"		=> Primitives::BlockFunction.new {|which| open_files[which].close},
+			"readln"	=> Primitives::BlockFunction.new { $stdin.gets.chomp },
+			"str"		=> Primitives::BlockFunction.new {|x| x.to_s }
+
+		}
+	end
+
+	def DS.tokenize(stuff)
+		return Tokenizing.tokenize stuff
+	end
+
+	def DS.parse(stuff)
+		tokens =
+			case stuff
+			when String
+				DS.tokenize stuff
+			else
+				stuff
+			end
+
 		@@parser.parse tokens
+	end
+
+	def DS.eval(stuff, scope=nil)
+		unless scope
+			scope = Environment::Scope.new
+			scope.define core_library
+		end
+
+		parse_tree =
+			case stuff
+			when String
+				DS.parse stuff
+			else
+				stuff
+			end
+		return Evaling.eval parse_tree, scope
+	end
+
+	def DS.run(stuff)
+		global_scope = Environment::Scope.new
+		global_scope.define core_library
+		DS.eval stuff, global_scope
+		global_scope["main"].call []
 	end
 end

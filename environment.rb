@@ -54,7 +54,7 @@ module Environment
 	end
 
 	class Scope
-		def initialize(parent)
+		def initialize(parent=nil)
 			@parent	= parent
 			@vars	= {}
 		end
