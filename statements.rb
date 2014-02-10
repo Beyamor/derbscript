@@ -79,7 +79,7 @@ module Statements
 		end
 
 		def to_s
-			Util.nsexpr "block", *@statements
+			Util.sexpr "block", *@statements
 		end
 	end
 

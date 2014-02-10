@@ -2,22 +2,6 @@ require_relative "evaling"
 require_relative "util"
 
 module Expressions
-	class ResolveVar
-		attr_accessor :identifier
-
-		def initialize(identifier)
-			@identifier = identifier
-		end
-		
-		def eval(scope)
-			@identifier.resolve(scope).value
-		end
-
-		def to_s
-			Util.sexpr "resolve", @identifier
-		end
-	end
-
 	class Literal
 		attr_reader :value
 
@@ -40,7 +24,7 @@ module Expressions
 
 	class Call
 		def initialize(name, params)
-			@name	= name.identifier # Ugh. HACK: need to grab the identifier from previously parsed resolution
+			@name	= name
 			@params	= params
 		end
 
@@ -95,7 +79,7 @@ module Expressions
 		def eval(scope)
 			scope.declare_var_if_missing @var, Float
 			value = Evaling.eval @value, scope
-			scope[@var].value = value
+			scope[@var] = value
 			return value
 		end
 

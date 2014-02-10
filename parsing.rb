@@ -18,7 +18,7 @@ module Parsing
 
 	class ResolveVarParslet
 		def parse(parser, token)
-			Expressions::ResolveVar.new Environment::Identifier.new token.text
+			Environment::Identifier.new token.text
 		end
 	end
 

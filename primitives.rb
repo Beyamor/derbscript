@@ -36,7 +36,7 @@ module Primitives
 			scope = Environment::Scope.new @parent_scope
 			@param_defs.zip(params).each do |param_def, param|
 				scope.declare_var param_def.name, param_def.type
-				scope[param_def.name].value = param
+				scope[param_def.name] = param
 			end
 
 			Evaling.eval @body, scope

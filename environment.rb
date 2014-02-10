@@ -22,12 +22,18 @@ module Environment
 				@scopes.join(":") + ":" + @name
 			end
 		end
+
+		def eval(scope)
+			resolve(scope)
+		end
 	end
 
 	class Var
-		def initialize(type, initial_value=nil)
-			@type	= type
-			value	= initial_value
+		def initialize(type=nil, initial_value=nil)
+			@type = type
+			if initial_value != nil
+				self.value = initial_value
+			end
 		end
 
 		def value
@@ -35,8 +41,14 @@ module Environment
 		end
 
 		def value=(new_value)
-			throw "Can't assign #{new_value}; #{new_value.class} is not a #{@type}" unless new_value.is_a? @type
+			if is_typed? and not new_value.is_a? @type
+				throw "Can't assign #{new_value}; #{new_value.class} is not a #{@type}"
+			end
 			@value = new_value
+		end
+
+		def is_typed?
+			@type != nil
 		end
 	end
 
@@ -68,11 +80,11 @@ module Environment
 			end
 		end
 
-		def redefine_value(name, value)
+		def set_existing_var(name, value)
 			if @vars.member? name
-				@vars[name] = value
+				@vars[name].value = value
 			elsif @parent
-				@parent.redefine_value name, value
+				@parent.set_existing_var name, value
 			else
 				throw "Variable #{name} doesn't exist"
 			end
@@ -81,16 +93,16 @@ module Environment
 		def []=(name, value)
 			name = name.name if name.respond_to? :name
 			if existing_var? name
-				redefine_value name, value
+				set_existing_var name, value
 			else
-				@vars[name] = value
+				@vars[name] = Var.new nil, value
 			end
 		end
 
 		def [](name)
 			name = name.name if name.respond_to? :name
 			if @vars.has_key? name
-				@vars[name]
+				@vars[name].value
 			elsif @parent
 				@parent[name]
 			else
