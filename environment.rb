@@ -115,34 +115,6 @@ module Environment
 			vars.each {|name, value| self[name] = value}
 		end
 
-		def to_tree
-			tree =
-				if @parent
-					@parent.to_tree
-				else
-					[]
-				end
-			tree << @vars.keys.to_a
-			return tree
-		end
-
-		def to_s
-			tree	= to_tree
-			depth	= 0
-			s = ""
-			tree.each do |level|
-				prefix =
-					if depth == 0
-						"-"
-					else
-						"\n|" + "-" * depth
-					end
-				s += prefix + level.to_s
-				depth += 1
-			end
-			return s
-		end
-
 		def root
 			if @parent
 				@parent.root
