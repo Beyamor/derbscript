@@ -11,8 +11,13 @@ module Environment
 		end
 
 		def resolve(scope)
-			@scopes.each {|sub_scope| scope = scope[sub_scope]}
-			return scope[@name]
+			if is_qualified?
+				scope = scope.root
+				@scopes.each {|sub_scope| scope = scope[sub_scope]}
+				return scope[@name]
+			else
+				return scope[@name]
+			end
 		end
 
 		def to_s
@@ -140,6 +145,14 @@ module Environment
 				depth += 1
 			end
 			return s
+		end
+
+		def root
+			if @parent
+				@parent.root
+			else
+				self
+			end
 		end
 	end
 end
