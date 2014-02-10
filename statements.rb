@@ -4,37 +4,38 @@ require_relative "environment"
 require_relative "util"
 
 module Statements
-	attr_reader :name, :parameter_names, :body
+	attr_reader :name, :params, :body
 
 	class ProcDefinition
-		def initialize(name, parameter_names, body)
+		def initialize(name, params, body)
 			@name			= name
-			@parameter_names	= parameter_names
+			@params	= params
 			@body			= body
 		end
 
 		def eval(scope)
-			scope[@name] = Primitives::Proc.new @parameter_names, @body, scope
+			scope[@name] = Primitives::Proc.new @params, @body, scope
 		end
 
 		def to_s
-			Util.sexpr "def-proc", @name, @parameter_names, *@body
+			Util.sexpr "def-proc", @name, @params, *@body
 		end
 	end
 
 	class FuncDefinition
-		def initialize(name, parameter_names, body)
-			@name			= name
-			@parameter_names	= parameter_names
-			@body			= body
+		def initialize(name, params, return_type, body)
+			@name		= name
+			@params		= params
+			@body		= body
+			@return_type	= return_type
 		end
 
 		def eval(scope)
-			scope[@name] = Primitives::Func.new @parameter_names, @body, scope
+			scope[@name] = Primitives::Func.new @params, @return_type, @body, scope
 		end
 
 		def to_s
-			Util.sexpr "def-func", @name, @parameter_names, *@body
+			Util.sexpr "def-func", @name, @params, *@body
 		end
 
 	end

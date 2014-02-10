@@ -79,7 +79,7 @@ module DS
 				parser.expect "->"
 				return_type	= parser.parse_type
 				body		= parser.parse_block
-				return Statements::FuncDefinition.new name, params, body
+				return Statements::FuncDefinition.new name, params, return_type, body
 			end,
 
 			"scope" => lambda do |parser|

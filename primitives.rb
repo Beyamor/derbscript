@@ -26,10 +26,11 @@ module Primitives
 	end
 
 	class Func
-		def initialize(param_defs, body, parent_scope)
+		def initialize(param_defs, return_type, body, parent_scope)
 			@parent_scope	= parent_scope
 			@param_defs	= param_defs
 			@body		= body
+			@return_type	= return_type
 		end
 
 		def call(params)
@@ -39,7 +40,9 @@ module Primitives
 				scope[param_def.name] = param
 			end
 
-			Evaling.eval @body, scope
+			result = Evaling.eval @body, scope
+			throw "Returned value #{result}:#{result.class} is not a #{@return_type}" unless result.is_a? @return_type
+			return result
 		end
 	end
 
