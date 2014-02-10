@@ -1,9 +1,8 @@
-require_relative "evaling"
 require_relative "util"
 
 module Expressions
 	class ::Environment::Identifier
-		def eval(scope)
+		def eval(evaluator, scope)
 			resolve scope
 		end
 	end
@@ -15,7 +14,7 @@ module Expressions
 			@value = value
 		end
 
-		def eval(scope)
+		def eval(evaluator, scope)
 			@value
 		end
 
@@ -34,9 +33,9 @@ module Expressions
 			@params	= params
 		end
 
-		def eval(scope)
-			params = @params.map {|p| Evaling.eval p, scope}
-			@name.resolve(scope).call(params)
+		def eval(evaluator, scope)
+			params = @params.map {|p| evaluator.eval p, scope}
+			@name.resolve(scope).call(evaluator, params)
 		end
 
 		def to_s
@@ -49,8 +48,8 @@ module Expressions
 			@expressions = expressions
 		end
 
-		def eval(scope)
-			result = @expressions.map{|e| Evaling.eval e, scope}.join
+		def eval(evaluator, scope)
+			result = @expressions.map{|e| evaluator.eval e, scope}.join
 		end
 
 		def to_s
@@ -65,9 +64,9 @@ module Expressions
 			@rhs		= rhs
 		end
 
-		def eval(scope)
-			lhs = Evaling.eval @lhs, scope
-			rhs = Evaling.eval @rhs, scope
+		def eval(evaluator, scope)
+			lhs = evaluator.eval @lhs, scope
+			rhs = evaluator.eval @rhs, scope
 			@operator.to_sym.to_proc.call lhs, rhs
 		end
 
@@ -82,9 +81,9 @@ module Expressions
 			@value	= value
 		end
 
-		def eval(scope)
+		def eval(evaluator, scope)
 			scope.declare_var_if_missing @var, Float
-			value = Evaling.eval @value, scope
+			value = evaluator.eval @value, scope
 			scope[@var] = value
 			return value
 		end

@@ -1,5 +1,4 @@
 require_relative "primitives"
-require_relative "evaling"
 require_relative "environment"
 require_relative "util"
 
@@ -13,7 +12,7 @@ module Statements
 			@body			= body
 		end
 
-		def eval(scope)
+		def eval(evaluator, scope)
 			scope[@name] = Primitives::Proc.new @params, @body, scope
 		end
 
@@ -30,7 +29,7 @@ module Statements
 			@return_type	= return_type
 		end
 
-		def eval(scope)
+		def eval(evaluator, scope)
 			scope[@name] = Primitives::Func.new @params, @return_type, @body, scope
 		end
 
@@ -46,9 +45,9 @@ module Statements
 			@body	= body
 		end
 
-		def eval(parent_scope)
+		def eval(evaluator, parent_scope)
 			scope = Environment::Scope.new parent_scope
-			Evaling.eval @body, scope
+			evaluator.eval @body, scope
 			parent_scope[@name] = scope
 		end
 
@@ -63,8 +62,8 @@ module Statements
 			@value	= value
 		end
 
-		def eval(scope)
-			scope[@name] = Evaling.eval @value, scope
+		def eval(evaluator, scope)
+			scope[@name] = evaluator.eval @value, scope
 		end
 
 		def to_s

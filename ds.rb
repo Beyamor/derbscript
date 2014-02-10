@@ -3,6 +3,7 @@ require_relative "parsing"
 require_relative "statements"
 require_relative "environment"
 require_relative "tokenizing"
+require_relative "evaling"
 
 module DS
 	PRECEDENCES = {
@@ -125,6 +126,22 @@ module DS
 		}
 	end
 
+	@@evaluator = Evaling::Evaluator.new
+	@@evaluator.truthiness = Proc.new do |thing|
+		case thing
+		when TrueClass
+			true
+		when FalseClass
+			false
+		when Float
+			thing == 0
+		when String
+			thing.empty?
+		else
+			false
+		end
+	end
+
 	def DS.tokenize(stuff)
 		return Tokenizing.tokenize stuff
 	end
@@ -154,13 +171,13 @@ module DS
 			else
 				stuff
 			end
-		return Evaling.eval parse_tree, scope
+		return @@evaluator.eval parse_tree, scope
 	end
 
 	def DS.run(stuff)
 		global_scope = Environment::Scope.new
 		global_scope.define core_library
 		DS.eval stuff, global_scope
-		global_scope["main"].call []
+		global_scope["main"].call @@evaluator, []
 	end
 end

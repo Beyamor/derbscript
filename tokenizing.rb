@@ -1,6 +1,6 @@
 module Tokenizing
 	COMMENT			= /\A(@.*?$)/
-	SYMBOLS			= /\A(\(|\)|\[|\]|=|\{|\}|,|->|>|>=|<|<=|\+|-|\*|\\)/
+	SYMBOLS			= /\A(\(|\)|\[|\]|==|=|\{|\}|,|->|>|>=|<|<=|\+|-|\*|\\)/
 	WHITESPACE		= /\A(( |\t)+)/
 	IDENTIFIER		= /\A([a-zA-Z_][a-zA-Z_0-9]*(:[a-zA-Z_][a-zA-Z_0-9]*)*)/
 	TERMINATOR		= /\A(\n|\r\n|\n\r)/

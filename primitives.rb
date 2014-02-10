@@ -1,4 +1,3 @@
-require_relative "evaling"
 require_relative "environment"
 
 module Primitives
@@ -7,7 +6,7 @@ module Primitives
 			@block = block
 		end
 
-		def call(params)
+		def call(evaluator, params)
 			@block.call *params
 		end
 	end
@@ -33,14 +32,14 @@ module Primitives
 			@return_type	= return_type
 		end
 
-		def call(params)
+		def call(evaluator, params)
 			scope = Environment::Scope.new @parent_scope
 			@param_defs.zip(params).each do |param_def, param|
 				scope.declare_var param_def.name, param_def.type
 				scope[param_def.name] = param
 			end
 
-			result = Evaling.eval @body, scope
+			result = evaluator.eval @body, scope
 			throw "Returned value #{result}:#{result.class} is not a #{@return_type}" unless result.is_a? @return_type
 			return result
 		end
@@ -53,14 +52,14 @@ module Primitives
 			@body		= body
 		end
 
-		def call(params)
+		def call(evaluator, params)
 			scope = Environment::Scope.new @parent_scope
 			@param_defs.zip(params).each do |param_def, param|
 				scope.declare_var param_def.name, param_def.type
 				scope[name].value = param
 			end
 
-			Evaling.eval @body, scope
+			evaluator.eval @body, scope
 		end
 	end
 end
