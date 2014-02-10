@@ -27,10 +27,6 @@ module Environment
 				@scopes.join(":") + ":" + @name
 			end
 		end
-
-		def eval(scope)
-			resolve(scope)
-		end
 	end
 
 	class Var

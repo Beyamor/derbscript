@@ -2,6 +2,12 @@ require_relative "evaling"
 require_relative "util"
 
 module Expressions
+	class ::Environment::Identifier
+		def eval(scope)
+			resolve scope
+		end
+	end
+
 	class Literal
 		attr_reader :value
 
